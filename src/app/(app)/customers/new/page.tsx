@@ -60,6 +60,23 @@ export default function NewCustomerPage() {
                 }
             }
 
+            // Fallback: forcefully fetch the ID if insert().select() returned empty due to RLS visibility delays
+            if (!insertedId) {
+                const normalizedName = name.replace(/\s+/g, '').toLowerCase();
+                const { data: fallbackData, error: fallbackError } = await supabase
+                    .from('customers')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('display_name_normalized', normalizedName)
+                    .single();
+
+                if (fallbackData?.id) {
+                    insertedId = fallbackData.id;
+                } else if (fallbackError) {
+                    console.error('Fallback fetch failed:', fallbackError);
+                }
+            }
+
             if (insertedId) {
                 router.push(`/customers/${insertedId}`)
             } else {
