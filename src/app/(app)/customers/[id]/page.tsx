@@ -2,13 +2,14 @@
 
 import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
 import { useRouter } from 'next/navigation'
 
-export default function CustomerDetailPage({ params }: { params: { id: string } }) {
+export default function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
+    const resolvedParams = use(params)
     const [customer, setCustomer] = useState<any>(null)
     const [latestVisit, setLatestVisit] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -21,7 +22,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     useEffect(() => {
         // Strict UUID validation to prevent 400 Bad Request from Supabase
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!params?.id || !uuidRegex.test(params.id)) {
+        if (!resolvedParams?.id || !uuidRegex.test(resolvedParams.id)) {
             router.replace('/customers')
             return
         }
@@ -32,7 +33,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 const { data: customerData, error: customerError } = await supabase
                     .from('customers')
                     .select('*')
-                    .eq('id', params.id)
+                    .eq('id', resolvedParams.id)
                     .single()
 
                 if (customerError) throw customerError
@@ -42,7 +43,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 const { data: visitData, error: visitError } = await supabase
                     .from('events')
                     .select('*')
-                    .eq('customer_id', params.id)
+                    .eq('customer_id', resolvedParams.id)
                     .eq('type', 'visit')
                     .order('occurred_at', { ascending: false })
                     .limit(1)
@@ -57,7 +58,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
             }
         }
         fetchData()
-    }, [params.id, supabase])
+    }, [resolvedParams.id, supabase])
 
     const stageLabels: Record<string, string> = {
         interest: '興味',

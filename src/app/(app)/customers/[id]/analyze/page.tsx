@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { ArrowLeft, MessageCircle, AlertCircle, Wand2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
-export default function AnalyzePage({ params }: { params: { id: string } }) {
+export default function AnalyzePage({ params }: { params: Promise<{ id: string }> }) {
+    const resolvedParams = use(params)
     const [text, setText] = useState('')
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [result, setResult] = useState<null | any>(null)
@@ -26,7 +27,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
     return (
         <div className="flex flex-col min-h-[100dvh] bg-white pb-20">
             <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-                <Link href={`/customers/${params.id}`} className="p-2 -ml-2 text-foreground hover:text-black transition-colors">
+                <Link href={`/customers/${resolvedParams.id}`} className="p-2 -ml-2 text-foreground hover:text-black transition-colors">
                     <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
                 <span className="font-light tracking-widest text-[12px] uppercase text-foreground">LINE Analysis / LINE解析</span>
@@ -108,7 +109,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                             </div>
                         </div>
 
-                        <Link href={`/customers/${params.id}`} className="w-full bg-foreground hover:bg-black text-white text-[11px] uppercase tracking-widest font-normal py-4 border border-foreground transition-all active:scale-[0.99] active:bg-zinc-800 flex items-center justify-center gap-3 mt-4">
+                        <Link href={`/customers/${resolvedParams.id}`} className="w-full bg-foreground hover:bg-black text-white text-[11px] uppercase tracking-widest font-normal py-4 border border-foreground transition-all active:scale-[0.99] active:bg-zinc-800 flex items-center justify-center gap-3 mt-4">
                             UPDATE PROFILE / プロフィール更新 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                         </Link>
                     </div>
