@@ -12,11 +12,11 @@ export default function CustomersPage() {
             </div>
 
             <div className="relative">
-                <Search className="absolute left-4 top-3.5 h-5 w-5 text-foreground/40" />
+                <Search className="absolute left-4 top-3.5 h-5 w-5 text-stone-300" />
                 <input
                     type="text"
                     placeholder="名前やタグで検索..."
-                    className="w-full glass bg-white/40 rounded-2xl pl-12 pr-4 py-3.5 placeholder-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/40 text-foreground transition-all font-medium"
+                    className="w-full bg-white border border-stone-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-4 py-3.5 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-200 text-stone-700 transition-all font-bold"
                 />
             </div>
 
@@ -56,47 +56,47 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
     const isCaution = dangerLevel === 'caution'
 
     const stageColors: Record<string, string> = {
-        interest: 'bg-foreground/5 text-foreground/60',
-        build: 'bg-blue-100 text-blue-500',
-        trust: 'bg-emerald-100 text-emerald-500',
-        depend: 'bg-primary/10 text-primary',
-        highvalue: 'bg-amber-100 text-amber-500' // Gold-like
+        interest: 'bg-stone-50 text-stone-500',
+        build: 'bg-blue-50 text-blue-500',
+        trust: 'bg-emerald-50 text-emerald-600',
+        depend: 'bg-rose-50 text-rose-500',
+        highvalue: 'bg-amber-50 text-amber-500' // Gold-like
     }
 
     return (
-        <Link href={`/customers/${id}`} className="glass rounded-3xl p-4 flex flex-col gap-4 relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer active:scale-[0.99] border-white/50">
+        <Link href={`/customers/${id}`} className="premium-card p-4 flex flex-col gap-4 relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer active:scale-[0.99]">
             {isCritical && (
-                <div className="absolute top-0 right-0 w-16 h-16 bg-red-500/10 rounded-bl-[100px] pointer-events-none" />
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-rose-100/50 to-transparent pointer-events-none" />
             )}
 
             <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-1.5">
-                    <h3 className="text-lg font-bold text-foreground">{name}</h3>
-                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full w-fit ${stageColors[stage] || stageColors.interest}`}>
+                    <h3 className="text-lg font-black text-stone-800 tracking-tight">{name}</h3>
+                    <span className={`text-[10px] font-black px-3 py-1 rounded-full w-fit tracking-wider ${stageColors[stage] || stageColors.interest}`}>
                         {stageLabel}
                     </span>
                 </div>
 
                 {isCritical && (
-                    <div className="flex items-center gap-1.5 bg-red-100 px-2.5 py-1 rounded-xl text-red-500">
-                        <ShieldAlert className="w-4 h-4" />
-                        <span className="text-[10px] uppercase font-bold tracking-wider">要注意</span>
+                    <div className="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-xl text-rose-500 border border-rose-100">
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        <span className="text-[10px] uppercase font-black tracking-widest">要注意</span>
                     </div>
                 )}
                 {isCaution && (
-                    <div className="flex items-center gap-1.5 bg-yellow-100 px-2.5 py-1 rounded-xl text-yellow-600">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span className="text-[10px] uppercase font-bold tracking-wider">警戒</span>
+                    <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl text-amber-600 border border-amber-100">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        <span className="text-[10px] uppercase font-black tracking-widest">警戒</span>
                     </div>
                 )}
             </div>
 
-            <div className="pt-3 border-t border-border flex items-center justify-between">
+            <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
                 <div className="flex flex-col gap-1">
-                    <span className="text-[10px] text-foreground/50 font-bold uppercase tracking-wider flex items-center gap-1">
-                        <Zap className="w-3 h-3 text-primary" /> 次のアクション
+                    <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-rose-400 fill-rose-400/20" /> 次のアクション
                     </span>
-                    <span className="text-sm text-foreground/80 font-bold line-clamp-1">{nextAction}</span>
+                    <span className="text-sm text-stone-700 font-bold tracking-wide line-clamp-1">{nextAction}</span>
                 </div>
             </div>
         </Link>

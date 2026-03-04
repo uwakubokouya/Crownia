@@ -1,11 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: hsl(340 90% 65%);
+  --color-primary: #f472b6;
+  /* Soft Rose Pink */
+  --color-primary-light: #fdf2f8;
+  --color-primary-dark: #be185d;
 
-  --color-background: hsl(355 100% 98%);
-  --color-foreground: hsl(340 30% 30%);
-  --color-border: hsl(350 50% 92%);
+  --color-background: #fffafa;
+  /* Very light warm pink-white */
+  --color-foreground: #44403c;
+  /* Stone 700 / Dark Grey for softer text */
+  --color-muted: #a8a29e;
+  /* Stone 400 */
+  --color-border: #f5f5f4;
+  /* Stone 100 */
+
+  --font-sans: var(--font-noto-sans-jp), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 @layer base {
@@ -14,6 +24,7 @@
     color: var(--color-foreground);
     overscroll-behavior-y: none;
     -webkit-font-smoothing: antialiased;
+    font-weight: 500;
   }
 
   ::-webkit-scrollbar {
@@ -22,11 +33,40 @@
   }
 }
 
+/* Base utility for cards / backgrounds */
 @utility glass {
-  background-color: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 4px 20px rgba(255, 180, 200, 0.15);
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 24px -6px rgba(244, 114, 182, 0.1);
+}
+
+/* New Premium Definitions */
+@utility premium-card {
+  background-color: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 30px -10px rgba(0, 0, 0, 0.05);
+  border: 1px solid #f9fafb;
+}
+
+@utility premium-btn {
+  background: linear-gradient(135deg, #f472b6 0%, #fb7185 100%);
+  color: white;
+  border-radius: 9999px;
+  font-weight: 700;
+  box-shadow: 0 4px 15px -3px rgba(244, 114, 182, 0.4);
+  transition: all 0.2s ease;
+}
+
+@utility premium-btn-hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -3px rgba(244, 114, 182, 0.5);
+}
+
+@utility premium-btn-active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px -3px rgba(244, 114, 182, 0.4);
 }
 
 @utility pb-safe {

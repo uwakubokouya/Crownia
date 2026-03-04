@@ -34,9 +34,9 @@ export function UpgradeButton({ currentPlan }: { currentPlan: string }) {
                     setIsLoading(false)
                 }
             }}
-            className="w-full bg-gradient-to-r from-primary to-rose-400 hover:from-primary/90 hover:to-rose-400/90 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full premium-btn py-3.5 hover:premium-btn-hover active:premium-btn-active disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
-            {isLoading ? '準備中...' : 'Proプランにアップグレード 💖'}
+            {isLoading ? '準備中...' : 'Proプランにアップグレード ✨'}
         </button>
     )
 }
