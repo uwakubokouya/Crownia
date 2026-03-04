@@ -64,14 +64,14 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
         interest: 'bg-white text-muted border-border',
         build: 'bg-white text-foreground border-border',
         trust: 'bg-white text-foreground border-foreground',
-        depend: 'bg-foreground text-white border-foreground',
+        depend: 'bg-rose-50 text-rose-600 border-rose-200 font-medium',
         highvalue: 'bg-white text-foreground border-foreground font-bold'
     }
 
     return (
         <Link href={`/customers/${id}`} className="premium-card p-5 flex flex-col gap-5 relative overflow-hidden group hover:border-foreground transition-all cursor-pointer active:scale-[0.99] active:bg-zinc-50">
             {isCritical && (
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-muted/10 to-transparent pointer-events-none" />
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-rose-100/50 to-transparent pointer-events-none" />
             )}
 
             <div className="flex items-start justify-between">
@@ -84,7 +84,7 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
 
                 <div className="flex flex-col gap-2 items-end">
                     {isCritical && (
-                        <div className="flex items-center gap-1.5 bg-foreground px-2 py-1 text-white border border-foreground">
+                        <div className="flex items-center gap-1.5 bg-rose-50 px-2 py-1 text-rose-600 border border-rose-200">
                             <ShieldAlert className="w-3 h-3" strokeWidth={1.5} />
                             <span className="text-[8px] uppercase font-normal tracking-widest">CRITICAL</span>
                         </div>
@@ -101,8 +101,7 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
             <div className="pt-4 border-t border-border flex items-center justify-between">
                 <div className="flex flex-col gap-2">
                     <span className="text-[8px] text-muted font-normal uppercase tracking-widest flex items-center gap-1.5">
-                        <Zap className="w-3 h-3 text-foreground" strokeWidth={1.5} /> NEXT ACTION
-                    </span>
+                        <Zap className="w-3 h-3 text-foreground" strokeWidth={1.5} /> NEXT ACTION / 次のアクション                    </span>
                     <span className="text-xs text-foreground font-light tracking-wide line-clamp-1">{nextAction}</span>
                 </div>
             </div>

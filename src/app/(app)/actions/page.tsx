@@ -24,7 +24,7 @@ export default function ActionsPage() {
     return (
         <div className="flex flex-col gap-8 p-6 pt-12">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">Strategy</h1>
+                <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">Action</h1>
             </div>
 
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
@@ -78,7 +78,7 @@ function ActionTicket({ id, customer, type, title, time, probability }: any) {
     const typeConfig: any = {
         attack: {
             label: 'ATTACK / 攻め',
-            icon: <Zap className="w-4 h-4 text-white" strokeWidth={1.5} />
+            icon: <Zap className="w-4 h-4 text-rose-600" strokeWidth={1.5} />
         },
         growth: {
             label: 'GROWTH / 成長',
@@ -94,35 +94,35 @@ function ActionTicket({ id, customer, type, title, time, probability }: any) {
     const isAttack = type === 'attack'
 
     return (
-        <Link href={`/customers/${id}`} className={`block premium-card p-6 flex flex-col gap-6 group active:scale-[0.98] transition-all cursor-pointer ${isAttack ? 'bg-foreground text-white border-foreground' : 'bg-white text-foreground border-border hover:border-foreground'}`}>
+        <Link href={`/customers/${id}`} className={`block premium-card p-6 flex flex-col gap-6 group active:scale-[0.98] transition-all cursor-pointer ${isAttack ? 'bg-rose-50 text-rose-900 border-rose-200' : 'bg-white text-foreground border-border hover:border-foreground'}`}>
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                    <div className={`p-2 border ${isAttack ? 'border-foreground bg-foreground' : 'border-border bg-white'}`}>
+                    <div className={`p-2 border ${isAttack ? 'border-rose-200 bg-white' : 'border-border bg-white'}`}>
                         {conf.icon}
                     </div>
                     <div className="flex flex-col gap-1">
-                        <span className={`text-[9px] font-normal tracking-widest uppercase ${isAttack ? 'text-white/60' : 'text-muted'}`}>{conf.label}</span>
-                        <span className={`text-[15px] font-normal tracking-wide ${isAttack ? 'text-white' : 'text-foreground'}`}>{customer}</span>
+                        <span className={`text-[9px] font-normal tracking-widest uppercase ${isAttack ? 'text-rose-600/80' : 'text-muted'}`}>{conf.label}</span>
+                        <span className={`text-[15px] font-normal tracking-wide ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{customer}</span>
                     </div>
                 </div>
-                <div className={`w-8 h-8 flex items-center justify-center transition-colors group-hover:scale-105 ${isAttack ? 'text-white border-white/20 group-hover:bg-white group-hover:text-black group-hover:border-white' : 'text-muted border-border group-hover:bg-foreground group-hover:text-white group-hover:border-foreground'} border rounded-none`}>
+                <div className={`w-8 h-8 flex items-center justify-center transition-colors group-hover:scale-105 ${isAttack ? 'text-rose-600 border-rose-200 group-hover:bg-rose-600 group-hover:text-white' : 'text-muted border-border group-hover:bg-foreground group-hover:text-white group-hover:border-foreground'} border rounded-none`}>
                     <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />
                 </div>
             </div>
 
-            <div className={`pt-5 border-t flex items-end justify-between ${isAttack ? 'border-white/20' : 'border-border'}`}>
+            <div className={`pt-5 border-t flex items-end justify-between ${isAttack ? 'border-rose-200/50' : 'border-border'}`}>
                 <div className="flex flex-col gap-2.5">
-                    <h3 className={`text-[15px] font-light tracking-wide leading-tight ${isAttack ? 'text-white' : 'text-foreground'}`}>{title}</h3>
-                    <p className={`text-[10px] font-normal flex items-center gap-2 uppercase tracking-widest ${isAttack ? 'text-white/80' : 'text-muted'}`}>
-                        SEND TIME
-                        <span className={`tracking-widest font-normal px-2 py-0.5 border ${isAttack ? 'bg-transparent text-white border-white/30' : 'bg-white text-foreground border-border'}`}>
+                    <h3 className={`text-[15px] font-light tracking-wide leading-tight ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{title}</h3>
+                    <p className={`text-[10px] font-normal flex items-center gap-2 uppercase tracking-widest ${isAttack ? 'text-rose-600/80' : 'text-muted'}`}>
+                        SEND TIME / 送信時間
+                        <span className={`tracking-widest font-normal px-2 py-0.5 border ${isAttack ? 'bg-white text-rose-700 border-rose-200' : 'bg-white text-foreground border-border'}`}>
                             {time}
                         </span>
                     </p>
                 </div>
                 <div className="flex flex-col items-end">
-                    <span className={`text-[8px] font-normal tracking-widest uppercase mb-1.5 ${isAttack ? 'text-white/60' : 'text-muted'}`}>Win Rate</span>
-                    <span className={`text-2xl font-light tracking-tight ${isAttack ? 'text-white' : 'text-foreground'}`}>{probability}<span className={`text-sm font-normal ml-0.5 ${isAttack ? 'text-white/60' : 'text-muted'}`}>%</span></span>
+                    <span className={`text-[8px] font-normal tracking-widest uppercase mb-1.5 ${isAttack ? 'text-rose-600/80' : 'text-muted'}`}>Win Rate / 成功率</span>
+                    <span className={`text-2xl font-light tracking-tight ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{probability}<span className={`text-sm font-normal ml-0.5 ${isAttack ? 'text-rose-600/80' : 'text-muted'}`}>%</span></span>
                 </div>
             </div>
         </Link>

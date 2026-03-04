@@ -57,13 +57,13 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 </section>
 
                 {/* LINE Analysis CTA */}
-                <Link href={`/customers/${customer.id}/analyze`} className="group relative bg-white border border-foreground p-5 flex items-center justify-between transition-all active:scale-[0.99] active:bg-zinc-50 hover:bg-zinc-50">
+                <Link href={`/customers/${customer.id}/analyze`} className="group relative bg-white border border-border hover:border-foreground p-5 flex items-center justify-between transition-all active:scale-[0.99] active:bg-zinc-50 hover:bg-zinc-50">
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white border border-border flex items-center justify-center group-hover:border-foreground transition-colors">
-                            <MessageCircle className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+                        <div className="w-10 h-10 bg-rose-50 border border-rose-100 flex items-center justify-center group-hover:border-rose-300 transition-colors">
+                            <MessageCircle className="w-4 h-4 text-rose-600" strokeWidth={1.5} />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <span className="font-normal text-foreground text-[13px] tracking-widest uppercase">Line Analysis</span>
+                            <span className="font-normal text-foreground text-[13px] tracking-widest uppercase">LINE Analysis / LINE解析</span>
                             <span className="text-[10px] text-muted font-light tracking-wide">最新の会話から戦略を再構築します</span>
                         </div>
                     </div>
@@ -73,9 +73,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 {/* AI Action Cards */}
                 <section className="flex flex-col gap-4">
                     <div className="flex items-center justify-between mb-2">
-                        <h2 className="text-xs font-normal flex items-center gap-2 text-muted tracking-widest uppercase">
-                            <Zap className="w-3 h-3 text-foreground" strokeWidth={1.5} />
-                            AI Strategy
+                        <h2 className="text-xs font-normal flex items-center gap-2 text-rose-600 tracking-widest uppercase">
+                            <Zap className="w-3 h-3 text-rose-500" strokeWidth={1.5} />
+                            AI Strategy / AI戦略
                         </h2>
                     </div>
 
@@ -87,7 +87,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                         reason="承認欲求が高まっており、他卓への対抗心から高額ボトルが期待できる。"
                         message="〇〇さんの席が一番落ち着くかも。いつもありがとうね"
                         time="22:30"
-                        icon={<Zap className="w-4 h-4 text-white" strokeWidth={1.5} />}
+                        icon={<Zap className="w-4 h-4 text-rose-600" strokeWidth={1.5} />}
                         type="attack"
                     />
 
@@ -131,7 +131,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                             <History className="w-4 h-4 text-foreground" strokeWidth={1.5} />
                         </div>
                         <div className="flex flex-col gap-1">
-                            <span className="font-normal text-foreground tracking-widest uppercase text-[12px]">History</span>
+                            <span className="font-normal text-foreground tracking-widest uppercase text-[12px]">History / 履歴</span>
                             <span className="text-[10px] text-muted font-light tracking-wide">前回のご来店: 12日前</span>
                         </div>
                     </div>
@@ -145,10 +145,10 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
 
 function ActionDetailCard({ title, goal, probability, reason, message, time, icon, type }: any) {
     const isAttack = type === 'attack';
-    const cardBg = isAttack ? 'bg-foreground text-white' : 'bg-white text-foreground';
-    const borderClass = isAttack ? 'border-foreground' : 'border-border';
-    const textMuted = isAttack ? 'text-white/60' : 'text-muted';
-    const iconWrapper = isAttack ? 'bg-foreground' : 'bg-white';
+    const cardBg = isAttack ? 'bg-rose-50 text-rose-900' : 'bg-white text-foreground';
+    const borderClass = isAttack ? 'border-rose-200' : 'border-border';
+    const textMuted = isAttack ? 'text-rose-600/80' : 'text-muted';
+    const iconWrapper = isAttack ? 'bg-white' : 'bg-white';
 
     const handleCopy = () => {
         navigator.clipboard.writeText(message);
@@ -162,37 +162,37 @@ function ActionDetailCard({ title, goal, probability, reason, message, time, ico
                     <div className={`p-2 border ${borderClass} ${iconWrapper}`}>
                         {icon}
                     </div>
-                    <span className={`font-light text-[14px] tracking-wide ${isAttack ? 'text-white' : 'text-foreground'}`}>{title}</span>
+                    <span className={`font-light text-[14px] tracking-wide ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{title}</span>
                 </div>
                 <div className="flex flex-col items-end">
-                    <span className={`text-[8px] font-normal tracking-widest uppercase mb-1 ${textMuted}`}>Win Rate</span>
-                    <span className={`text-2xl font-light tracking-tight ${isAttack ? 'text-white' : 'text-foreground'}`}>{probability}<span className={`text-sm ml-0.5 ${textMuted}`}>%</span></span>
+                    <span className={`text-[8px] font-normal tracking-widest uppercase mb-1 ${textMuted}`}>Win Rate / 成功率</span>
+                    <span className={`text-2xl font-light tracking-tight ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{probability}<span className={`text-sm ml-0.5 ${textMuted}`}>%</span></span>
                 </div>
             </div>
 
             <div className={`flex flex-col gap-6`}>
-                <div className={`grid grid-cols-2 gap-6 border-t ${isAttack ? 'border-white/20' : 'border-border'} pt-5`}>
+                <div className={`grid grid-cols-2 gap-6 border-t ${isAttack ? 'border-rose-200/50' : 'border-border'} pt-5`}>
                     <div>
-                        <span className={`text-[8px] font-normal uppercase tracking-widest block mb-1.5 ${textMuted}`}>目標</span>
-                        <span className={`text-[12px] font-light ${isAttack ? 'text-white' : 'text-foreground'}`}>{goal}</span>
+                        <span className={`text-[8px] font-normal uppercase tracking-widest block mb-1.5 ${textMuted}`}>目標 / Goal</span>
+                        <span className={`text-[12px] font-light ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{goal}</span>
                     </div>
                     <div>
-                        <span className={`text-[8px] font-normal uppercase tracking-widest block mb-1.5 ${textMuted}`}>理由</span>
+                        <span className={`text-[8px] font-normal uppercase tracking-widest block mb-1.5 ${textMuted}`}>理由 / Reason</span>
                         <p className={`text-[11px] font-light leading-relaxed ${textMuted}`}>{reason}</p>
                     </div>
                 </div>
 
-                <div className={`p-5 border ${isAttack ? 'bg-white/10 border-white/20' : 'bg-zinc-50 border-border'}`}>
+                <div className={`p-5 border ${isAttack ? 'bg-white/60 border-rose-200' : 'bg-zinc-50 border-border'}`}>
                     <div className="flex items-center justify-between mb-4">
                         <span className={`text-[8px] font-normal uppercase tracking-widest ${textMuted}`}>
                             おすすめの返信内容
                         </span>
-                        <span className={`font-normal border px-2 py-0.5 text-[8px] tracking-widest uppercase ${isAttack ? 'bg-transparent text-white border-white/30' : 'bg-white text-foreground border-border'}`}>
+                        <span className={`font-normal border px-2 py-0.5 text-[8px] tracking-widest uppercase ${isAttack ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-white text-foreground border-border'}`}>
                             {time} 送信
                         </span>
                     </div>
-                    <p className={`text-[13px] font-light tracking-wide leading-relaxed ${isAttack ? 'text-white' : 'text-foreground'}`}>{message}</p>
-                    <button onClick={handleCopy} className={`w-full mt-6 py-3 text-[11px] font-normal tracking-widest uppercase transition-all active:scale-[0.98] border ${isAttack ? 'bg-white text-foreground hover:bg-white/90 border-white active:bg-zinc-200' : 'bg-foreground text-white hover:bg-[#222] border-foreground active:bg-black'}`}>
+                    <p className={`text-[13px] font-light tracking-wide leading-relaxed ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{message}</p>
+                    <button onClick={handleCopy} className={`w-full mt-6 py-3 text-[11px] font-normal tracking-widest uppercase transition-all active:scale-[0.98] border ${isAttack ? 'bg-rose-500 text-white hover:bg-rose-600 border-rose-600 active:bg-rose-700' : 'bg-foreground text-white hover:bg-[#222] border-foreground active:bg-black'}`}>
                         コピーする
                     </button>
                 </div>

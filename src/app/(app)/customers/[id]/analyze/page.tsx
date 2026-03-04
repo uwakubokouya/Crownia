@@ -29,7 +29,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                 <Link href={`/customers/${params.id}`} className="p-2 -ml-2 text-foreground hover:text-black transition-colors">
                     <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
-                <span className="font-light tracking-widest text-[12px] uppercase text-foreground">Line Analysis</span>
+                <span className="font-light tracking-widest text-[12px] uppercase text-foreground">LINE Analysis / LINE解析</span>
                 <div className="w-9"></div>
             </header>
 
@@ -38,10 +38,10 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                 {!result ? (
                     <>
                         <div className="text-center mt-4">
-                            <div className="mx-auto w-12 h-12 bg-foreground text-white flex items-center justify-center mb-6">
+                            <div className="mx-auto w-12 h-12 bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mb-6">
                                 <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
                             </div>
-                            <h1 className="text-lg font-light tracking-wide mb-3 text-foreground uppercase">Input Chat History</h1>
+                            <h1 className="text-lg font-light tracking-wide mb-3 text-foreground uppercase">Input Chat History / トーク履歴入力</h1>
                             <p className="text-[11px] text-muted font-light leading-relaxed">
                                 LINEのトーク履歴をペーストしてください。<br />AIが自動で会話を解析し、最適な戦略を立案します。
                             </p>
@@ -70,7 +70,7 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                                 <div className="w-4 h-4 border border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    <Wand2 className="w-4 h-4" strokeWidth={1.5} /> START ANALYSIS
+                                    <Wand2 className="w-4 h-4" strokeWidth={1.5} /> START ANALYSIS / 解析開始
                                 </>
                             )}
                         </button>
@@ -78,10 +78,10 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                 ) : (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col gap-8 mt-4">
                         <div className="text-center mb-2">
-                            <div className="mx-auto w-12 h-12 border border-foreground bg-white text-foreground flex items-center justify-center mb-6">
+                            <div className="mx-auto w-12 h-12 border border-rose-200 bg-rose-50 text-rose-600 flex items-center justify-center mb-6">
                                 <Wand2 className="w-5 h-5" strokeWidth={1.5} />
                             </div>
-                            <h1 className="text-xl font-light tracking-widest text-foreground mb-3 uppercase">Analysis Complete</h1>
+                            <h1 className="text-xl font-light tracking-widest text-foreground mb-3 uppercase">Analysis Complete / 解析完了</h1>
                             <p className="text-[11px] text-muted font-light leading-relaxed">
                                 AIによる解析が完了しました。<br />以下の情報でお客様のプロフィールを更新しますか？
                             </p>
@@ -102,14 +102,14 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                                     <span className="text-lg font-light text-foreground uppercase">CAUTION</span>
                                 </div>
                                 <div className="flex flex-col gap-2">
-                                    <span className="text-[9px] font-normal text-muted uppercase tracking-widest">Confidence</span>
+                                    <span className="text-[9px] font-normal text-muted uppercase tracking-widest">Confidence / 信頼度</span>
                                     <span className="text-lg font-light text-foreground">{result.confidence}%</span>
                                 </div>
                             </div>
                         </div>
 
                         <Link href={`/customers/${params.id}`} className="w-full bg-foreground hover:bg-black text-white text-[11px] uppercase tracking-widest font-normal py-4 border border-foreground transition-all active:scale-[0.99] active:bg-zinc-800 flex items-center justify-center gap-3 mt-4">
-                            UPDATE PROFILE <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+                            UPDATE PROFILE / プロフィール更新 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                         </Link>
                     </div>
                 )}

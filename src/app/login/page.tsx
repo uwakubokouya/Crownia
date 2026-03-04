@@ -15,12 +15,12 @@ export default async function LoginPage() {
         <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-white p-6">
             <div className="w-full max-w-sm p-10 border border-border bg-white">
                 <div className="mb-12 flex flex-col items-center text-center">
-                    <div className="mb-8 h-20 w-20 relative">
+                    <div className="mb-8 h-36 w-36 relative">
                         <Image
                             src="/logo.png"
                             alt="Crownia Logo"
                             fill
-                            className="object-contain grayscale contrast-125 mix-blend-multiply"
+                            className="object-contain mix-blend-darken"
                             priority
                         />
                     </div>
