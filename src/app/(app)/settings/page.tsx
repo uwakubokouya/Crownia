@@ -1,9 +1,27 @@
-'use client'
-
 import { User, CreditCard, ShieldCheck, HelpCircle, LogOut } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/utils/supabase/server'
+import { UpgradeButton } from './upgrade-button'
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    let plan = 'free'
+
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan')
+            .eq('id', user.id)
+            .single()
+
+        if (profile) {
+            plan = profile.plan
+        }
+    }
+
+    const planDisplay = plan === 'pro' ? 'Pro' : plan === 'basic' ? 'Basic' : 'Free'
+
     return (
         <div className="flex flex-col gap-6 p-6 pt-10">
             <div className="flex items-center justify-between">
@@ -16,37 +34,17 @@ export default function SettingsPage() {
                 <div className="relative">
                     <span className="text-[10px] font-bold text-primary uppercase tracking-widest block mb-1">現在のプラン 👑</span>
                     <div className="flex items-end gap-2 mb-4">
-                        <h2 className="text-3xl font-black text-foreground/80">Basic</h2>
+                        <h2 className="text-3xl font-black text-foreground/80">{planDisplay}</h2>
                         <span className="text-sm text-foreground/40 font-bold mb-1">/ 月</span>
                     </div>
                     <p className="text-xs text-foreground/60 font-bold leading-relaxed mb-6">
-                        すべての基本AI機能をご利用いただけます ✨<br />もっと詳しい売上予測やLTV分析はProプランで。
+                        {plan === 'pro' ? (
+                            <>すべての強力なAI機能が使い放題です ✨<br />専属コンサルタントとしてフルサポートします！</>
+                        ) : (
+                            <>すべての基本AI機能をご利用いただけます ✨<br />もっと詳しい売上予測やLTV分析はProプランで。</>
+                        )}
                     </p>
-                    <button
-                        onClick={async () => {
-                            try {
-                                const res = await fetch('/api/stripe/checkout', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_placeholder' }) // Ensure this env var exists in Vercel
-                                })
-                                const data = await res.json()
-                                if (data.url) {
-                                    window.location.href = data.url
-                                } else if (data.error) {
-                                    alert(`エラー: ${data.error}`)
-                                } else {
-                                    alert('不明なエラーが発生しました')
-                                }
-                            } catch (e: any) {
-                                console.error(e)
-                                alert(`通信エラー: ${e.message}`)
-                            }
-                        }}
-                        className="w-full bg-gradient-to-r from-primary to-rose-400 hover:from-primary/90 hover:to-rose-400/90 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]"
-                    >
-                        Proプランにアップグレード 💖
-                    </button>
+                    <UpgradeButton currentPlan={plan} />
                 </div>
             </section>
 
