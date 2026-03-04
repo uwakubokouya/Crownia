@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Calendar, DollarSign, Wine, FileText, Check } from 'lucide-react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 
-export default function NewVisitPage({ params }: { params: { id: string } }) {
+export default function NewVisitPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter()
+    const resolvedParams = use(params)
     const [isLoading, setIsLoading] = useState(false)
     const [date, setDate] = useState(new Date().toISOString().split('T')[0])
     const [visitType, setVisitType] = useState('honshimei')
@@ -38,7 +39,7 @@ export default function NewVisitPage({ params }: { params: { id: string } }) {
                 .insert([
                     {
                         user_id: userId,
-                        customer_id: params.id,
+                        customer_id: resolvedParams.id,
                         type: 'visit',
                         amount: amount ? Number(amount) : 0,
                         occurred_at: new Date(date).toISOString(),
@@ -52,7 +53,7 @@ export default function NewVisitPage({ params }: { params: { id: string } }) {
 
             if (error) throw error
 
-            router.push(`/customers/${params.id}`)
+            router.push(`/customers/${resolvedParams.id}`)
         } catch (error) {
             console.error('Error adding event:', error)
             alert('登録に失敗しました。ログイン状態を確認してください。')
@@ -65,7 +66,7 @@ export default function NewVisitPage({ params }: { params: { id: string } }) {
         <div className="flex flex-col min-h-[100dvh] bg-white pb-20">
             {/* Header */}
             <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
-                <Link href={`/customers/${params.id}`} className="p-2 -ml-2 text-foreground hover:text-black transition-colors">
+                <Link href={`/customers/${resolvedParams.id}`} className="p-2 -ml-2 text-foreground hover:text-black transition-colors">
                     <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
                 <div className="flex items-center gap-2">
@@ -113,8 +114,8 @@ export default function NewVisitPage({ params }: { params: { id: string } }) {
                                     type="button"
                                     onClick={() => setVisitType(vType.id)}
                                     className={`py-3 px-4 border text-[13px] font-light tracking-wide transition-all ${visitType === vType.id
-                                            ? 'border-foreground bg-foreground text-white'
-                                            : 'border-border bg-white text-foreground hover:border-black'
+                                        ? 'border-foreground bg-foreground text-white'
+                                        : 'border-border bg-white text-foreground hover:border-black'
                                         }`}
                                 >
                                     {vType.label}
