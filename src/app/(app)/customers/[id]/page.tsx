@@ -5,7 +5,10 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
+import { useRouter } from 'next/navigation'
+
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
+    const router = useRouter()
     const [customer, setCustomer] = useState<any>(null)
     const [latestVisit, setLatestVisit] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -16,6 +19,11 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     )
 
     useEffect(() => {
+        if (params.id === 'undefined') {
+            router.replace('/customers')
+            return
+        }
+
         const fetchData = async () => {
             try {
                 // Fetch customer
