@@ -10,7 +10,7 @@ export default function NewCustomerPage() {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
     const [name, setName] = useState('')
-    const [type, setType] = useState('approval')
+    const [type, setType] = useState('auto')
     const [memo, setMemo] = useState('')
 
     const supabase = createBrowserClient(
@@ -41,7 +41,7 @@ export default function NewCustomerPage() {
                         display_name: name.trim(),
                         display_name_normalized: name.replace(/\s+/g, '').toLowerCase(),
                         stage: 'interest',
-                        current_type: type,
+                        current_type: type === 'auto' ? null : type,
                         notes: memo.trim()
                     }
                 ])
@@ -110,6 +110,7 @@ export default function NewCustomerPage() {
                                 onChange={(e) => setType(e.target.value)}
                                 className="w-full appearance-none bg-white border border-border rounded-none px-4 py-3 focus:outline-none focus:border-foreground text-foreground transition-all font-light text-[15px] tracking-wide"
                             >
+                                <option value="auto">AIにお任せ (後から自動判定)</option>
                                 <option value="approval">承認欲求型 (褒められたい/認められたい)</option>
                                 <option value="lonely">寂しがり屋型 (話を聞いてほしい/構ってほしい)</option>
                                 <option value="control">支配型 (自分の思い通りにしたい/アドバイスしたい)</option>

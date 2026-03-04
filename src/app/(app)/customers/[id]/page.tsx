@@ -116,7 +116,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                                 {stageLabels[customer.stage] || customer.stage}段階
                             </span>
                             <span className="px-3 py-1 bg-white text-muted text-[9px] font-normal border border-border tracking-widest uppercase">
-                                {typeLabels[customer.current_type] || customer.current_type}
+                                {customer.current_type ? (typeLabels[customer.current_type] || customer.current_type) : 'AI分析中 (未定)'}
                             </span>
                         </div>
                     </div>
