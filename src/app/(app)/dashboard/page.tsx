@@ -1,14 +1,17 @@
 import { Zap, AlertTriangle, TrendingUp, ArrowUpCircle } from 'lucide-react'
 import Link from 'next/link'
+import { format } from 'date-fns'
 
 export default function DashboardPage() {
+    const today = format(new Date(), 'yyyy.M.d')
+
     return (
-        <div className="flex flex-col gap-8 p-6 pt-12">
+        <div className="flex flex-col gap-8 p-6 pt-12 pb-24">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">Home</h1>
-                    <p className="text-muted text-[10px] mt-1 font-medium tracking-widest uppercase">March 4</p>
+                    <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">HOME</h1>
+                    <p className="text-muted text-[11px] mt-1 font-medium tracking-widest uppercase">{today}</p>
                 </div>
                 <div className="h-10 w-10 bg-white border border-border flex items-center justify-center">
                     <div className="w-8 h-8 bg-rose-50 flex items-center justify-center">
@@ -17,10 +20,10 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* 1. 今日のミッション */}
+            {/* 1. 本日のタスク */}
             <section>
                 <div className="flex items-center gap-2 mb-4">
-                    <h2 className="text-xs font-normal text-muted tracking-widest uppercase">Todays Mission / 今日のミッション</h2>
+                    <h2 className="text-xs font-normal text-muted tracking-widest uppercase">TODAY'S TASK / 本日のタスク</h2>
                 </div>
                 <div className="flex flex-col gap-4">
                     <ActionCard
@@ -43,7 +46,7 @@ export default function DashboardPage() {
             {/* 2. 要注意のお客様 */}
             <section>
                 <div className="flex items-center gap-2 mb-4 mt-2">
-                    <h2 className="text-xs font-normal text-muted tracking-widest uppercase">Attention / 要注意</h2>
+                    <h2 className="text-xs font-normal text-muted tracking-widest uppercase">ATTENTION / 注意が必要なお客様</h2>
                 </div>
                 <div className="premium-card p-5 relative overflow-hidden group border-l-[4px] border-l-rose-300">
                     <div className="flex items-center justify-between mb-3">
@@ -58,7 +61,7 @@ export default function DashboardPage() {
             <section className="grid grid-cols-2 gap-4 mt-2">
                 <div className="premium-card p-5 flex flex-col justify-between hover:bg-rose-50/30 transition-colors">
                     <div className="flex items-center gap-1.5 mb-6 text-muted">
-                        <span className="text-[9px] font-normal tracking-widest uppercase">Current / 現在</span>
+                        <span className="text-[9px] font-normal tracking-widest uppercase">CURRENT / 現在の売上</span>
                     </div>
                     <div>
                         <div className="text-xl font-normal text-foreground tracking-wide">¥450,000</div>
@@ -69,7 +72,7 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-1.5 mb-6 text-foreground">
                         <span className="text-[9px] font-normal tracking-widest text-rose-600 uppercase flex items-center gap-1">
                             <Zap strokeWidth={1.5} className="w-3 h-3" />
-                            AI Forecast / AI予測
+                            FORECAST / AI着地予測
                         </span>
                     </div>
                     <div>
@@ -79,10 +82,10 @@ export default function DashboardPage() {
                 </div>
             </section>
 
-            {/* 4. 段階昇格チャンス */}
+            {/* 4. 段階昇格見込み */}
             <section>
                 <div className="flex items-center gap-2 mb-4 mt-4">
-                    <h2 className="text-xs font-normal text-muted tracking-widest uppercase">Upgrade Chance / 昇格チャンス</h2>
+                    <h2 className="text-xs font-normal text-muted tracking-widest uppercase">UPGRADE / 昇格見込みのお客様</h2>
                 </div>
                 <div className="premium-card p-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between group hover:border-rose-200 transition-colors">
                     <div>
@@ -93,7 +96,7 @@ export default function DashboardPage() {
                             <span className="text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5">依存</span>
                         </div>
                     </div>
-                    <Link href="/actions" className="premium-btn text-[10px] px-6 py-2.5 sm:w-auto w-full text-center hover:premium-btn-hover active:premium-btn-active">
+                    <Link href="/customers/2" className="premium-btn text-[10px] px-6 py-2.5 sm:w-auto w-full text-center hover:premium-btn-hover active:premium-btn-active">
                         VIEW
                     </Link>
                 </div>
@@ -123,7 +126,7 @@ function ActionCard({ id, name, action, time, type }: { id: string, name: string
                 <span className="text-[11px] text-muted font-light tracking-wide">{action}</span>
             </div>
             <div className="flex flex-col items-end gap-1.5 border-l border-border pl-4">
-                <span className="text-[8px] font-normal text-muted tracking-widest uppercase">Time / 時間</span>
+                <span className="text-[8px] font-normal text-muted tracking-widest uppercase">TIME / 推奨時間</span>
                 <span className="text-xs font-normal text-foreground tracking-widest">{time}</span>
             </div>
         </Link>

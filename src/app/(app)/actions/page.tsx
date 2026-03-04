@@ -114,7 +114,7 @@ function ActionTicket({ id, customer, type, title, time, probability }: any) {
                 <div className="flex flex-col gap-2.5">
                     <h3 className={`text-[15px] font-light tracking-wide leading-tight ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{title}</h3>
                     <p className={`text-[10px] font-normal flex items-center gap-2 uppercase tracking-widest ${isAttack ? 'text-rose-600/80' : 'text-muted'}`}>
-                        SEND TIME / 送信時間
+                        SEND TIME / 推奨送信時間
                         <span className={`tracking-widest font-normal px-2 py-0.5 border ${isAttack ? 'bg-white text-rose-700 border-rose-200' : 'bg-white text-foreground border-border'}`}>
                             {time}
                         </span>

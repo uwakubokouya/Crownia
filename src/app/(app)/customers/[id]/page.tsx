@@ -185,10 +185,10 @@ function ActionDetailCard({ title, goal, probability, reason, message, time, ico
                 <div className={`p-5 border ${isAttack ? 'bg-white/60 border-rose-200' : 'bg-zinc-50 border-border'}`}>
                     <div className="flex items-center justify-between mb-4">
                         <span className={`text-[8px] font-normal uppercase tracking-widest ${textMuted}`}>
-                            おすすめの返信内容
+                            RECOMMENDED MESSAGE / 推奨メッセージ
                         </span>
                         <span className={`font-normal border px-2 py-0.5 text-[8px] tracking-widest uppercase ${isAttack ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-white text-foreground border-border'}`}>
-                            {time} 送信
+                            {time} 頃
                         </span>
                     </div>
                     <p className={`text-[13px] font-light tracking-wide leading-relaxed ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{message}</p>
