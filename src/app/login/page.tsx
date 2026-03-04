@@ -21,14 +21,14 @@ export default async function LoginPage() {
                     <p className="mt-2 text-sm text-foreground/60 font-bold tracking-wide">売れっ子キャバ嬢の頭脳 🎀</p>
                 </div>
 
-                <form action={signInWithLine} className="space-y-4">
-                    <button
-                        type="submit"
+                <div className="space-y-4">
+                    <a
+                        href="/api/auth/line"
                         className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl bg-[#06C755] px-4 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#05b34c] hover:shadow-[0_0_20px_rgba(6,199,85,0.4)] active:scale-[0.98]"
                     >
                         <span className="relative z-10">LINEでログイン</span>
-                    </button>
-                </form>
+                    </a>
+                </div>
 
                 <p className="mt-8 text-center text-xs text-foreground/50 font-medium">
                     ログインすることで、利用規約およびプライバシーポリシーに同意したものとみなされます。
@@ -36,20 +36,4 @@ export default async function LoginPage() {
             </div>
         </div>
     )
-}
-
-async function signInWithLine() {
-    'use server'
-    const supabase = await createClient()
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'line' as any,
-        options: {
-            redirectTo: `${process.env.APP_BASE_URL}/api/auth/callback`,
-        },
-    })
-
-    if (data.url) {
-        redirect(data.url)
-    }
 }
