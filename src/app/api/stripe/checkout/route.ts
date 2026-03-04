@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) {
-            return new NextResponse('Unauthorized', { status: 401 })
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const { data: profile } = await supabase
@@ -19,6 +19,11 @@ export async function POST(req: Request) {
             .single()
 
         const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_BASE_URL || new URL(req.url).origin
+
+        // Validate priceId exists
+        if (!priceId) {
+            return NextResponse.json({ error: 'Price ID is required' }, { status: 400 })
+        }
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -40,8 +45,8 @@ export async function POST(req: Request) {
         })
 
         return NextResponse.json({ url: session.url })
-    } catch (error) {
+    } catch (error: any) {
         console.error('Stripe Checkout Error:', error)
-        return new NextResponse('Internal Error', { status: 500 })
+        return NextResponse.json({ error: error.message || 'Internal Error' }, { status: 500 })
     }
 }
