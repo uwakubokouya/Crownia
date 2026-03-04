@@ -126,10 +126,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => alert('Edit Customer (Coming soon)')} className="p-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100">
+                    <Link href={`/customers/${resolvedParams.id}/edit`} className="p-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100 block">
                         <Edit3 className="w-4 h-4" strokeWidth={1.5} />
-                    </button>
-                    <button onClick={() => alert('Options (Coming soon)')} className="p-2 -mr-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100">
+                    </Link>
+                    <button onClick={() => alert('Options (Coming soon)')} className="p-2 -mr-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100 hidden">
                         <MoreVertical className="w-5 h-5" strokeWidth={1.5} />
                     </button>
                 </div>
@@ -272,13 +272,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                         来店記録を追加 / ADD VISIT
                     </Link>
 
-                    <section onClick={() => alert('History View (Coming soon)')} className="premium-card p-5 flex items-center justify-between cursor-pointer active:scale-[0.99] active:bg-zinc-50 transition-all hover:border-foreground group">
+                    <Link href={`/customers/${resolvedParams.id}/events`} className="premium-card p-5 flex items-center justify-between cursor-pointer active:scale-[0.99] active:bg-zinc-50 transition-all hover:border-foreground group">
                         <div className="flex items-center gap-4">
                             <div className="w-10 h-10 bg-white border border-border flex items-center justify-center group-hover:border-foreground transition-colors">
                                 <History className="w-4 h-4 text-foreground" strokeWidth={1.5} />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <span className="font-normal text-foreground tracking-widest uppercase text-[12px]">History / 履歴</span>
+                                <span className="font-normal text-foreground tracking-widest uppercase text-[12px]">History / 履歴を一覧する</span>
                                 <span className="text-[10px] text-muted font-light tracking-wide">
                                     {latestVisit
                                         ? `前回のご来店: ${new Date(latestVisit.occurred_at).toLocaleDateString('ja-JP')} (${new Intl.NumberFormat('ja-JP').format(latestVisit.amount)}円)`
@@ -287,7 +287,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                             </div>
                         </div>
                         <ArrowLeft className="w-4 h-4 text-muted rotate-180" strokeWidth={1.5} />
-                    </section>
+                    </Link>
                 </div>
 
             </div>
