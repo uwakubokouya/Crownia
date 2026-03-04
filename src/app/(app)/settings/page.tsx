@@ -2,6 +2,7 @@ import { User, CreditCard, ShieldCheck, HelpCircle, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { UpgradeButton } from './upgrade-button'
+import { LogoutButton } from './logout-button'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -57,10 +58,7 @@ export default async function SettingsPage() {
 
             {/* Logout */}
             <section className="mt-4">
-                <button className="flex items-center justify-center gap-3 w-full p-4 border border-border bg-white text-muted hover:bg-zinc-50 hover:text-foreground transition-all active:scale-[0.99] font-light tracking-widest uppercase">
-                    <LogOut className="w-4 h-4" strokeWidth={1.5} />
-                    <span className="text-[11px]">ログアウト</span>
-                </button>
+                <LogoutButton />
             </section>
 
             <div className="flex justify-center mt-6">

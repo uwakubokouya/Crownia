@@ -108,9 +108,9 @@ export default function AnalyzePage({ params }: { params: { id: string } }) {
                             </div>
                         </div>
 
-                        <button className="w-full bg-foreground hover:bg-black text-white text-[11px] uppercase tracking-widest font-normal py-4 border border-foreground transition-all active:scale-[0.99] flex items-center justify-center gap-3 mt-4">
+                        <Link href={`/customers/${params.id}`} className="w-full bg-foreground hover:bg-black text-white text-[11px] uppercase tracking-widest font-normal py-4 border border-foreground transition-all active:scale-[0.99] active:bg-zinc-800 flex items-center justify-center gap-3 mt-4">
                             UPDATE PROFILE <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-                        </button>
+                        </Link>
                     </div>
                 )}
 

@@ -1,6 +1,26 @@
+"use client"
+
 import { Zap, TrendingUp, Shield, CheckCircle2 } from 'lucide-react'
+import { useState } from 'react'
+import Link from 'next/link'
 
 export default function ActionsPage() {
+    const [filter, setFilter] = useState('すべて')
+
+    const tickets = [
+        { id: 1, customer: "佐藤 健一", type: "attack", title: "ボトルのオーダー打診", time: "22:30", probability: 75 },
+        { id: 2, customer: "高橋 誠", type: "growth", title: "「信頼」から「依存」へ昇格", time: "18:00", probability: 82 },
+        { id: 3, customer: "鈴木 一郎", type: "defense", title: "失客防止のジャブ", time: "20:00", probability: 90 },
+    ]
+
+    const filteredTickets = filter === 'すべて'
+        ? tickets
+        : tickets.filter(t =>
+            (filter === '攻め' && t.type === 'attack') ||
+            (filter === '関係作り' && t.type === 'growth') ||
+            (filter === '関係キープ' && t.type === 'defense')
+        )
+
     return (
         <div className="flex flex-col gap-8 p-6 pt-12">
             <div className="flex items-center justify-between">
@@ -8,48 +28,38 @@ export default function ActionsPage() {
             </div>
 
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-6 px-6">
-                <FilterChip label="すべて" active />
-                <FilterChip label="攻め" icon={<Zap className="w-3.5 h-3.5" strokeWidth={1.5} />} />
-                <FilterChip label="関係作り" icon={<TrendingUp className="w-3.5 h-3.5" strokeWidth={1.5} />} />
-                <FilterChip label="関係キープ" icon={<Shield className="w-3.5 h-3.5" strokeWidth={1.5} />} />
+                <FilterChip label="すべて" active={filter === 'すべて'} onClick={() => setFilter('すべて')} />
+                <FilterChip label="攻め" active={filter === '攻め'} onClick={() => setFilter('攻め')} icon={<Zap className="w-3.5 h-3.5" strokeWidth={1.5} />} />
+                <FilterChip label="関係作り" active={filter === '関係作り'} onClick={() => setFilter('関係作り')} icon={<TrendingUp className="w-3.5 h-3.5" strokeWidth={1.5} />} />
+                <FilterChip label="関係キープ" active={filter === '関係キープ'} onClick={() => setFilter('関係キープ')} icon={<Shield className="w-3.5 h-3.5" strokeWidth={1.5} />} />
             </div>
 
             <div className="flex flex-col gap-4 mt-2">
-                {/* Attack */}
-                <ActionTicket
-                    customer="佐藤 健一"
-                    type="attack"
-                    title="ボトルのオーダー打診"
-                    time="22:30"
-                    probability={75}
-                />
-
-                {/* Growth */}
-                <ActionTicket
-                    customer="高橋 誠"
-                    type="growth"
-                    title="「信頼」から「依存」へ昇格"
-                    time="18:00"
-                    probability={82}
-                />
-
-                {/* Defense */}
-                <ActionTicket
-                    customer="鈴木 一郎"
-                    type="defense"
-                    title="失客防止のジャブ"
-                    time="20:00"
-                    probability={90}
-                />
+                {filteredTickets.map(ticket => (
+                    <ActionTicket
+                        key={ticket.id}
+                        id={ticket.id}
+                        customer={ticket.customer}
+                        type={ticket.type}
+                        title={ticket.title}
+                        time={ticket.time}
+                        probability={ticket.probability}
+                    />
+                ))}
+                {filteredTickets.length === 0 && (
+                    <div className="text-center p-8 border border-border mt-4">
+                        <p className="text-xs text-muted tracking-widest uppercase">No Actions Found</p>
+                    </div>
+                )}
             </div>
         </div>
     )
 }
 
-function FilterChip({ label, active, icon }: any) {
+function FilterChip({ label, active, icon, onClick }: any) {
     if (active) {
         return (
-            <button className="flex items-center gap-2 px-5 py-2.5 text-[11px] font-normal tracking-widest uppercase transition-all bg-foreground text-white border border-foreground">
+            <button onClick={onClick} className="flex items-center gap-2 px-5 py-2.5 text-[11px] font-normal tracking-widest uppercase transition-all bg-foreground text-white border border-foreground active:scale-[0.95]">
                 {icon}
                 {label}
             </button>
@@ -57,14 +67,14 @@ function FilterChip({ label, active, icon }: any) {
     }
 
     return (
-        <button className="flex items-center gap-2 px-5 py-2.5 text-[11px] font-normal tracking-widest uppercase transition-all border border-border bg-white text-muted hover:border-foreground hover:text-foreground">
+        <button onClick={onClick} className="flex items-center gap-2 px-5 py-2.5 text-[11px] font-normal tracking-widest uppercase transition-all border border-border bg-white text-muted hover:border-foreground hover:text-foreground active:scale-[0.95]">
             {icon}
             {label}
         </button>
     )
 }
 
-function ActionTicket({ customer, type, title, time, probability }: any) {
+function ActionTicket({ id, customer, type, title, time, probability }: any) {
     const typeConfig: any = {
         attack: {
             label: 'ATTACK / 攻め',
@@ -84,7 +94,7 @@ function ActionTicket({ customer, type, title, time, probability }: any) {
     const isAttack = type === 'attack'
 
     return (
-        <div className={`premium-card p-6 flex flex-col gap-6 group active:scale-[0.98] transition-all cursor-pointer ${isAttack ? 'bg-foreground text-white border-foreground' : 'bg-white text-foreground border-border hover:border-foreground'}`}>
+        <Link href={`/customers/${id}`} className={`block premium-card p-6 flex flex-col gap-6 group active:scale-[0.98] transition-all cursor-pointer ${isAttack ? 'bg-foreground text-white border-foreground' : 'bg-white text-foreground border-border hover:border-foreground'}`}>
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                     <div className={`p-2 border ${isAttack ? 'border-foreground bg-foreground' : 'border-border bg-white'}`}>
@@ -95,7 +105,7 @@ function ActionTicket({ customer, type, title, time, probability }: any) {
                         <span className={`text-[15px] font-normal tracking-wide ${isAttack ? 'text-white' : 'text-foreground'}`}>{customer}</span>
                     </div>
                 </div>
-                <div className={`w-8 h-8 flex items-center justify-center transition-colors group-hover:scale-105 ${isAttack ? 'text-white border-white/20 hover:border-white' : 'text-muted border-border hover:text-foreground hover:border-foreground'} border`}>
+                <div className={`w-8 h-8 flex items-center justify-center transition-colors group-hover:scale-105 ${isAttack ? 'text-white border-white/20 group-hover:bg-white group-hover:text-black group-hover:border-white' : 'text-muted border-border group-hover:bg-foreground group-hover:text-white group-hover:border-foreground'} border rounded-none`}>
                     <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} />
                 </div>
             </div>
@@ -115,6 +125,6 @@ function ActionTicket({ customer, type, title, time, probability }: any) {
                     <span className={`text-2xl font-light tracking-tight ${isAttack ? 'text-white' : 'text-foreground'}`}>{probability}<span className={`text-sm font-normal ml-0.5 ${isAttack ? 'text-white/60' : 'text-muted'}`}>%</span></span>
                 </div>
             </div>
-        </div>
+        </Link>
     )
 }

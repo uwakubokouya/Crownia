@@ -1,3 +1,5 @@
+"use client"
+
 import { Search, Plus, ShieldAlert, Zap } from 'lucide-react'
 import Link from 'next/link'
 
@@ -6,7 +8,10 @@ export default function CustomersPage() {
         <div className="flex flex-col gap-8 p-6 pt-12">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">Clients</h1>
-                <button className="flex items-center justify-center bg-foreground text-white p-2 border border-foreground hover:bg-white hover:text-foreground transition-all">
+                <button
+                    onClick={() => alert('Add New Client (Coming soon)')}
+                    className="flex items-center justify-center bg-foreground text-white p-2 border border-foreground hover:bg-white hover:text-foreground active:scale-[0.95] active:bg-zinc-800 transition-all"
+                >
                     <Plus className="w-5 h-5" strokeWidth={1.5} />
                 </button>
             </div>
@@ -64,7 +69,7 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
     }
 
     return (
-        <Link href={`/customers/${id}`} className="premium-card p-5 flex flex-col gap-5 relative overflow-hidden group hover:border-foreground transition-all cursor-pointer active:scale-[0.99]">
+        <Link href={`/customers/${id}`} className="premium-card p-5 flex flex-col gap-5 relative overflow-hidden group hover:border-foreground transition-all cursor-pointer active:scale-[0.99] active:bg-zinc-50">
             {isCritical && (
                 <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-muted/10 to-transparent pointer-events-none" />
             )}

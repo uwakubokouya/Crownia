@@ -21,7 +21,7 @@ export function BottomNav() {
 
 function NavItem({ href, icon, label, active }: { href: string; icon: React.ReactNode; label: string; active?: boolean }) {
     return (
-        <Link href={href} className="flex flex-col items-center gap-1.5 w-16 group outline-none">
+        <Link href={href} className="flex flex-col items-center justify-center gap-1.5 w-16 h-12 rounded-lg group outline-none active:bg-zinc-100/80 transition-all">
             <div className={`transition-all duration-300 ${active ? 'text-foreground' : 'text-muted hover:text-foreground group-active:scale-95'}`}>
                 {icon}
             </div>

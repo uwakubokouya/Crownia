@@ -1,3 +1,5 @@
+"use client"
+
 import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,10 +26,10 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                     <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
                 <div className="flex items-center gap-2">
-                    <button className="p-2 text-foreground hover:text-black transition-colors">
+                    <button onClick={() => alert('Edit Customer (Coming soon)')} className="p-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100">
                         <Edit3 className="w-4 h-4" strokeWidth={1.5} />
                     </button>
-                    <button className="p-2 -mr-2 text-foreground hover:text-black transition-colors">
+                    <button onClick={() => alert('Options (Coming soon)')} className="p-2 -mr-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100">
                         <MoreVertical className="w-5 h-5" strokeWidth={1.5} />
                     </button>
                 </div>
@@ -55,7 +57,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 </section>
 
                 {/* LINE Analysis CTA */}
-                <Link href={`/customers/${customer.id}/analyze`} className="group relative bg-white border border-foreground p-5 flex items-center justify-between transition-all active:scale-[0.99] hover:bg-zinc-50">
+                <Link href={`/customers/${customer.id}/analyze`} className="group relative bg-white border border-foreground p-5 flex items-center justify-between transition-all active:scale-[0.99] active:bg-zinc-50 hover:bg-zinc-50">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-white border border-border flex items-center justify-center group-hover:border-foreground transition-colors">
                             <MessageCircle className="w-4 h-4 text-foreground" strokeWidth={1.5} />
@@ -123,7 +125,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 </section>
 
                 {/* History Preview */}
-                <section className="premium-card p-5 flex items-center justify-between cursor-pointer active:scale-[0.99] transition-all hover:border-foreground group">
+                <section onClick={() => alert('History View (Coming soon)')} className="premium-card p-5 flex items-center justify-between cursor-pointer active:scale-[0.99] active:bg-zinc-50 transition-all hover:border-foreground group">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-white border border-border flex items-center justify-center group-hover:border-foreground transition-colors">
                             <History className="w-4 h-4 text-foreground" strokeWidth={1.5} />
@@ -147,6 +149,11 @@ function ActionDetailCard({ title, goal, probability, reason, message, time, ico
     const borderClass = isAttack ? 'border-foreground' : 'border-border';
     const textMuted = isAttack ? 'text-white/60' : 'text-muted';
     const iconWrapper = isAttack ? 'bg-foreground' : 'bg-white';
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(message);
+        alert('Copied to clipboard!');
+    };
 
     return (
         <div className={`premium-card p-6 ${cardBg} ${borderClass} relative transition-all group`}>
@@ -185,7 +192,7 @@ function ActionDetailCard({ title, goal, probability, reason, message, time, ico
                         </span>
                     </div>
                     <p className={`text-[13px] font-light tracking-wide leading-relaxed ${isAttack ? 'text-white' : 'text-foreground'}`}>{message}</p>
-                    <button className={`w-full mt-6 py-3 text-[11px] font-normal tracking-widest uppercase transition-all active:scale-[0.98] border ${isAttack ? 'bg-white text-foreground hover:bg-white/90 border-white' : 'bg-foreground text-white hover:bg-[#222] border-foreground'}`}>
+                    <button onClick={handleCopy} className={`w-full mt-6 py-3 text-[11px] font-normal tracking-widest uppercase transition-all active:scale-[0.98] border ${isAttack ? 'bg-white text-foreground hover:bg-white/90 border-white active:bg-zinc-200' : 'bg-foreground text-white hover:bg-[#222] border-foreground active:bg-black'}`}>
                         コピーする
                     </button>
                 </div>
