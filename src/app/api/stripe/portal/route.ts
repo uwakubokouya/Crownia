@@ -17,13 +17,15 @@ export async function GET(req: Request) {
             .eq('id', user.id)
             .single()
 
+        const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_BASE_URL || new URL(req.url).origin
+
         if (!profile?.stripe_customer_id) {
-            return NextResponse.redirect(`${process.env.APP_BASE_URL}/settings`)
+            return NextResponse.redirect(`${origin}/settings`)
         }
 
         const session = await stripe.billingPortal.sessions.create({
             customer: profile.stripe_customer_id,
-            return_url: `${process.env.APP_BASE_URL}/settings`,
+            return_url: `${origin}/settings`,
         })
 
         return NextResponse.redirect(session.url)

@@ -18,6 +18,8 @@ export async function POST(req: Request) {
             .eq('id', user.id)
             .single()
 
+        const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_BASE_URL || new URL(req.url).origin
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             billing_address_collection: 'auto',
@@ -30,8 +32,8 @@ export async function POST(req: Request) {
                 },
             ],
             mode: 'subscription',
-            success_url: `${process.env.APP_BASE_URL}/settings?success=true`,
-            cancel_url: `${process.env.APP_BASE_URL}/settings?canceled=true`,
+            success_url: `${origin}/settings?success=true`,
+            cancel_url: `${origin}/settings?canceled=true`,
             metadata: {
                 userId: user.id,
             },
