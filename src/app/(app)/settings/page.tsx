@@ -31,10 +31,16 @@ export default function SettingsPage() {
                                     body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_placeholder' }) // Ensure this env var exists in Vercel
                                 })
                                 const data = await res.json()
-                                if (data.url) window.location.href = data.url
-                            } catch (e) {
+                                if (data.url) {
+                                    window.location.href = data.url
+                                } else if (data.error) {
+                                    alert(`エラー: ${data.error}`)
+                                } else {
+                                    alert('不明なエラーが発生しました')
+                                }
+                            } catch (e: any) {
                                 console.error(e)
-                                alert('エラーが発生しました。設定をご確認ください。')
+                                alert(`通信エラー: ${e.message}`)
                             }
                         }}
                         className="w-full bg-gradient-to-r from-primary to-rose-400 hover:from-primary/90 hover:to-rose-400/90 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]"
