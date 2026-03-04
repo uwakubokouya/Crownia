@@ -20,9 +20,9 @@ export default function SettingsPage() {
                     <p className="text-xs text-foreground/60 font-bold leading-relaxed mb-6">
                         すべての基本AI機能をご利用いただけます ✨<br />もっと詳しい売上予測やLTV分析はProプランで。
                     </p>
-                    <button className="w-full bg-gradient-to-r from-primary to-rose-400 hover:from-primary/90 hover:to-rose-400/90 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]">
+                    <a href="/api/stripe/checkout" className="flex items-center justify-center w-full bg-gradient-to-r from-primary to-rose-400 hover:from-primary/90 hover:to-rose-400/90 text-white font-bold py-3.5 rounded-2xl transition-all shadow-lg shadow-primary/30 active:scale-[0.98]">
                         Proプランにアップグレード 💖
-                    </button>
+                    </a>
                 </div>
             </section>
 
@@ -50,6 +50,20 @@ export default function SettingsPage() {
 }
 
 function MenuRow({ icon, label, href = "#" }: any) {
+    if (href.startsWith('/api')) {
+        return (
+            <a href={href} className="flex items-center justify-between p-4 glass rounded-2xl group active:scale-[0.98] transition-all border-border shadow-sm bg-white/40 hover:bg-white/60">
+                <div className="flex items-center gap-4">
+                    <div className="text-foreground/40 group-hover:text-primary transition-colors bg-white p-2 rounded-xl shadow-sm border border-border/50">
+                        {icon}
+                    </div>
+                    <span className="font-bold text-foreground/80">{label}</span>
+                </div>
+                <svg className="w-5 h-5 text-foreground/20 group-hover:text-primary transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+            </a>
+        )
+    }
+
     return (
         <Link href={href} className="flex items-center justify-between p-4 glass rounded-2xl group active:scale-[0.98] transition-all border-border shadow-sm bg-white/40 hover:bg-white/60">
             <div className="flex items-center gap-4">
