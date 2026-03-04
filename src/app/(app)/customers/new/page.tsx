@@ -33,7 +33,7 @@ export default function NewCustomerPage() {
                 throw new Error('Not authenticated')
             }
 
-            const { data, error } = await supabase
+            const response = await supabase
                 .from('customers')
                 .insert([
                     {
@@ -45,13 +45,23 @@ export default function NewCustomerPage() {
                         notes: memo.trim()
                     }
                 ])
-                .select('id')
-                .single()
+                .select() // Return the created row(s)
 
-            if (error) throw error
+            if (response.error) throw response.error
 
-            if (data) {
-                router.push(`/customers/${data.id}`)
+            // Defensively extract the ID whether it's an array or an object
+            let insertedId = null;
+            if (response.data) {
+                const responseData = response.data as any;
+                if (Array.isArray(responseData) && responseData.length > 0) {
+                    insertedId = responseData[0].id;
+                } else if (!Array.isArray(responseData) && responseData.id) {
+                    insertedId = responseData.id;
+                }
+            }
+
+            if (insertedId) {
+                router.push(`/customers/${insertedId}`)
             } else {
                 router.push('/customers')
             }
