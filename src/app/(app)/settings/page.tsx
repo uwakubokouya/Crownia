@@ -1,3 +1,5 @@
+'use client'
+
 import { User, CreditCard, ShieldCheck, HelpCircle, LogOut } from 'lucide-react'
 import Link from 'next/link'
 
