@@ -19,7 +19,9 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     )
 
     useEffect(() => {
-        if (params.id === 'undefined') {
+        // Strict UUID validation to prevent 400 Bad Request from Supabase
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!params?.id || !uuidRegex.test(params.id)) {
             router.replace('/customers')
             return
         }
