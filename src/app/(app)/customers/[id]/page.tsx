@@ -13,6 +13,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const [customer, setCustomer] = useState<any>(null)
     const [latestVisit, setLatestVisit] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isEditingMemo, setIsEditingMemo] = useState(false)
+    const [memoInput, setMemoInput] = useState('')
+    const [isSavingMemo, setIsSavingMemo] = useState(false)
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,6 +41,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
                 if (customerError) throw customerError
                 setCustomer(customerData)
+                setMemoInput(customerData.notes || '')
 
                 // Fetch latest visit
                 const { data: visitData, error: visitError } = await supabase
@@ -59,6 +63,25 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         }
         fetchData()
     }, [resolvedParams.id, supabase])
+
+    const handleSaveMemo = async () => {
+        setIsSavingMemo(true)
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .update({ notes: memoInput })
+                .eq('id', resolvedParams.id)
+
+            if (error) throw error
+            setCustomer((prev: any) => ({ ...prev, notes: memoInput }))
+            setIsEditingMemo(false)
+        } catch (error) {
+            console.error('Error updating memo:', error)
+            alert('メモの保存に失敗しました。')
+        } finally {
+            setIsSavingMemo(false)
+        }
+    }
 
     const stageLabels: Record<string, string> = {
         interest: '興味',
@@ -195,12 +218,51 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
                 {/* Notes */}
                 <section className="premium-card p-6 flex flex-col gap-4">
-                    <h2 className="text-[9px] font-normal text-foreground uppercase tracking-widest flex items-center gap-2">
-                        接客メモ / NOTES
-                    </h2>
-                    <p className="text-[12px] text-muted border-l border-border pl-4 py-1 font-light leading-relaxed whitespace-pre-wrap">
-                        {customer.notes || 'メモは未登録です。'}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-[9px] font-normal text-foreground uppercase tracking-widest flex items-center gap-2">
+                            接客メモ / NOTES
+                        </h2>
+                        {!isEditingMemo && (
+                            <button onClick={() => setIsEditingMemo(true)} className="text-[9px] font-normal text-muted uppercase tracking-widest hover:text-foreground transition-colors flex items-center gap-1">
+                                <Edit3 className="w-3 h-3" strokeWidth={1.5} /> Edit
+                            </button>
+                        )}
+                    </div>
+
+                    {isEditingMemo ? (
+                        <div className="flex flex-col gap-3">
+                            <textarea
+                                value={memoInput}
+                                onChange={(e) => setMemoInput(e.target.value)}
+                                rows={5}
+                                className="w-full bg-zinc-50 border border-border p-4 text-[12px] text-foreground placeholder:text-muted focus:outline-none focus:border-foreground resize-none font-light tracking-wide transition-colors"
+                                placeholder="接客に関するメモ、特徴などを入力..."
+                            />
+                            <div className="flex items-center justify-end gap-2 mt-1">
+                                <button
+                                    onClick={() => {
+                                        setIsEditingMemo(false)
+                                        setMemoInput(customer.notes || '')
+                                    }}
+                                    disabled={isSavingMemo}
+                                    className="px-4 py-2 text-[10px] uppercase tracking-widest font-normal text-muted hover:text-foreground transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveMemo}
+                                    disabled={isSavingMemo}
+                                    className="px-4 py-2 bg-foreground text-white text-[10px] uppercase tracking-widest font-normal transition-all active:scale-[0.98] disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {isSavingMemo ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Save'}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="text-[12px] text-muted border-l border-border pl-4 py-1 font-light leading-relaxed whitespace-pre-wrap">
+                            {customer.notes || 'メモは未登録です。'}
+                        </p>
+                    )}
                 </section>
 
                 {/* History & Events */}
