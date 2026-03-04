@@ -59,16 +59,17 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
-    const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
+    const publicRoutes = ['/login', '/terms', '/privacy']
+    const isPublicRoute = publicRoutes.some(route => request.nextUrl.pathname.startsWith(route)) || request.nextUrl.pathname === '/logo.png'
 
-    if (!user && !isAuthRoute && !request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/auth/')) {
+    if (!user && !isPublicRoute && !request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/auth/')) {
         // Redirect to login if unauthenticated
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
     }
 
-    if (user && isAuthRoute) {
+    if (user && request.nextUrl.pathname.startsWith('/login')) {
         // Redirect to dashboard if logged in
         const url = request.nextUrl.clone()
         url.pathname = '/dashboard'

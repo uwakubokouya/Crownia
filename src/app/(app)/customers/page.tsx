@@ -3,24 +3,24 @@ import Link from 'next/link'
 
 export default function CustomersPage() {
     return (
-        <div className="flex flex-col gap-6 p-6 pt-10">
+        <div className="flex flex-col gap-8 p-6 pt-12">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-wider text-foreground">お客様一覧</h1>
-                <button className="flex items-center justify-center bg-primary text-white p-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-[0_4px_15px_-3px_rgba(197,160,89,0.3)]">
-                    <Plus className="w-5 h-5" />
+                <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">Clients</h1>
+                <button className="flex items-center justify-center bg-foreground text-white p-2 border border-foreground hover:bg-white hover:text-foreground transition-all">
+                    <Plus className="w-5 h-5" strokeWidth={1.5} />
                 </button>
             </div>
 
             <div className="relative">
-                <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted" />
+                <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted" strokeWidth={1.5} />
                 <input
                     type="text"
-                    placeholder="名前やタグで検索..."
-                    className="w-full bg-white border border-border shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-xl pl-12 pr-4 py-3.5 placeholder-muted/60 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground transition-all font-medium"
+                    placeholder="Search by name or tag..."
+                    className="w-full bg-white border border-border rounded-none pl-12 pr-4 py-3 placeholder-muted focus:outline-none focus:border-foreground text-foreground transition-all font-light text-sm tracking-wide"
                 />
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
                 {/* Mock Data for MVP Design */}
                 <CustomerCard
                     id="1"
@@ -56,47 +56,49 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
     const isCaution = dangerLevel === 'caution'
 
     const stageColors: Record<string, string> = {
-        interest: 'bg-stone-50 text-stone-500 border border-border/80',
-        build: 'bg-primary-light text-primary-dark border border-primary/20',
-        trust: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-        depend: 'bg-primary/10 text-primary border border-primary/30',
-        highvalue: 'bg-gradient-to-r from-[#D4AF37]/10 to-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30'
+        interest: 'bg-white text-muted border-border',
+        build: 'bg-white text-foreground border-border',
+        trust: 'bg-white text-foreground border-foreground',
+        depend: 'bg-foreground text-white border-foreground',
+        highvalue: 'bg-white text-foreground border-foreground font-bold'
     }
 
     return (
-        <Link href={`/customers/${id}`} className="premium-card p-4 flex flex-col gap-4 relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer active:scale-[0.99]">
+        <Link href={`/customers/${id}`} className="premium-card p-5 flex flex-col gap-5 relative overflow-hidden group hover:border-foreground transition-all cursor-pointer active:scale-[0.99]">
             {isCritical && (
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-red-100/30 to-transparent pointer-events-none" />
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-muted/10 to-transparent pointer-events-none" />
             )}
 
             <div className="flex items-start justify-between">
-                <div className="flex flex-col gap-1.5">
-                    <h3 className="text-lg font-bold text-foreground tracking-wide">{name}</h3>
-                    <span className={`text-[9px] font-bold px-3 py-1 rounded-sm w-fit tracking-widest ${stageColors[stage] || stageColors.interest}`}>
+                <div className="flex flex-col gap-2.5">
+                    <h3 className="text-lg font-normal text-foreground tracking-wide">{name}</h3>
+                    <span className={`text-[9px] font-normal px-3 py-1 border tracking-widest uppercase w-fit ${stageColors[stage] || stageColors.interest}`}>
                         {stageLabel}
                     </span>
                 </div>
 
-                {isCritical && (
-                    <div className="flex items-center gap-1 bg-red-50 px-2 py-1 rounded-sm text-red-600 border border-red-100">
-                        <ShieldAlert className="w-3 h-3" />
-                        <span className="text-[9px] uppercase font-bold tracking-widest">要注意</span>
-                    </div>
-                )}
-                {isCaution && (
-                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-sm text-amber-600 border border-amber-100">
-                        <AlertTriangle className="w-3 h-3" />
-                        <span className="text-[9px] uppercase font-bold tracking-widest">警戒</span>
-                    </div>
-                )}
+                <div className="flex flex-col gap-2 items-end">
+                    {isCritical && (
+                        <div className="flex items-center gap-1.5 bg-foreground px-2 py-1 text-white border border-foreground">
+                            <ShieldAlert className="w-3 h-3" strokeWidth={1.5} />
+                            <span className="text-[8px] uppercase font-normal tracking-widest">CRITICAL</span>
+                        </div>
+                    )}
+                    {isCaution && (
+                        <div className="flex items-center gap-1.5 bg-white px-2 py-1 text-foreground border border-foreground">
+                            <AlertTriangle className="w-3 h-3" strokeWidth={1.5} />
+                            <span className="text-[8px] uppercase font-normal tracking-widest">CAUTION</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            <div className="pt-3 border-t border-border/60 flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                    <span className="text-[9px] text-muted font-bold uppercase tracking-widest flex items-center gap-1">
-                        <Zap className="w-3 h-3 text-primary fill-primary/20" /> 次のアクション
+            <div className="pt-4 border-t border-border flex items-center justify-between">
+                <div className="flex flex-col gap-2">
+                    <span className="text-[8px] text-muted font-normal uppercase tracking-widest flex items-center gap-1.5">
+                        <Zap className="w-3 h-3 text-foreground" strokeWidth={1.5} /> NEXT ACTION
                     </span>
-                    <span className="text-sm text-foreground/80 font-medium tracking-wide line-clamp-1">{nextAction}</span>
+                    <span className="text-xs text-foreground font-light tracking-wide line-clamp-1">{nextAction}</span>
                 </div>
             </div>
         </Link>
@@ -105,7 +107,7 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
 
 function AlertTriangle(props: any) {
     return (
-        <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
             <path d="M12 9v4" />
             <path d="M12 17h.01" />
