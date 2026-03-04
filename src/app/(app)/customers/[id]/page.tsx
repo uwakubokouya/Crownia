@@ -1,21 +1,87 @@
 "use client"
 
-import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History } from 'lucide-react'
+import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
-    // Mock Data
-    const customer = {
-        id: params.id,
-        name: '佐藤 健一',
-        stage: 'depend', // 依存
-        stageLabel: '依存',
-        type: 'approval', // 承認欲求型
-        typeLabel: '承認欲求型',
-        typeConfidence: 85,
-        secondTypeLabel: 'ステータス誇示型',
-        dangerLevel: 'critical',
-        notes: 'IT企業役員。港区在住。ワイン好きだが自分からは頼まない。\n褒められると財布の紐が緩む。',
+    const [customer, setCustomer] = useState<any>(null)
+    const [latestVisit, setLatestVisit] = useState<any>(null)
+    const [isLoading, setIsLoading] = useState(true)
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch customer
+                const { data: customerData, error: customerError } = await supabase
+                    .from('customers')
+                    .select('*')
+                    .eq('id', params.id)
+                    .single()
+
+                if (customerError) throw customerError
+                setCustomer(customerData)
+
+                // Fetch latest visit
+                const { data: visitData, error: visitError } = await supabase
+                    .from('events')
+                    .select('*')
+                    .eq('customer_id', params.id)
+                    .eq('type', 'visit')
+                    .order('occurred_at', { ascending: false })
+                    .limit(1)
+
+                if (!visitError && visitData && visitData.length > 0) {
+                    setLatestVisit(visitData[0])
+                }
+            } catch (err) {
+                console.error('Error fetching customer details:', err)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchData()
+    }, [params.id, supabase])
+
+    const stageLabels: Record<string, string> = {
+        interest: '興味',
+        build: '関係構築',
+        trust: '信頼',
+        depend: '依存',
+        highvalue: '高単価'
+    };
+
+    const typeLabels: Record<string, string> = {
+        approval: '承認欲求型',
+        lonely: '寂しがり屋型',
+        control: '支配型',
+        hobby: '趣味特化型',
+        status: 'ステータス誇示型'
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col min-h-[100dvh] bg-white pb-20 items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted" />
+            </div>
+        )
+    }
+
+    if (!customer) {
+        return (
+            <div className="flex flex-col min-h-[100dvh] bg-white pb-20 items-center justify-center">
+                <p className="text-muted tracking-widest font-light text-sm uppercase">Customer Not Found</p>
+                <Link href="/customers" className="mt-4 px-4 py-2 bg-foreground text-white text-xs uppercase tracking-widest">
+                    Back to Clients
+                </Link>
+            </div>
+        )
     }
 
     return (
@@ -40,17 +106,17 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 <section className="flex flex-col items-center text-center gap-4">
                     <div className="w-24 h-24 bg-white border border-border flex items-center justify-center p-1">
                         <div className="w-full h-full bg-foreground flex items-center justify-center text-3xl font-light text-white">
-                            {customer.name.charAt(0)}
+                            {customer.display_name.charAt(0)}
                         </div>
                     </div>
                     <div>
-                        <h1 className="text-2xl font-light tracking-wide text-foreground">{customer.name}</h1>
+                        <h1 className="text-2xl font-light tracking-wide text-foreground">{customer.display_name}</h1>
                         <div className="flex items-center justify-center gap-2 mt-4">
                             <span className="px-3 py-1 bg-foreground text-white text-[9px] font-normal uppercase tracking-widest">
-                                {customer.stageLabel}段階
+                                {stageLabels[customer.stage] || customer.stage}段階
                             </span>
                             <span className="px-3 py-1 bg-white text-muted text-[9px] font-normal border border-border tracking-widest uppercase">
-                                {customer.typeLabel} ({customer.typeConfidence}%)
+                                {typeLabels[customer.current_type] || customer.current_type}
                             </span>
                         </div>
                     </div>
@@ -121,22 +187,35 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                     <h2 className="text-[9px] font-normal text-foreground uppercase tracking-widest flex items-center gap-2">
                         接客メモ / NOTES
                     </h2>
-                    <p className="text-[12px] text-muted border-l border-border pl-4 py-1 font-light leading-relaxed whitespace-pre-wrap">{customer.notes}</p>
+                    <p className="text-[12px] text-muted border-l border-border pl-4 py-1 font-light leading-relaxed whitespace-pre-wrap">
+                        {customer.notes || 'メモは未登録です。'}
+                    </p>
                 </section>
 
-                {/* History Preview */}
-                <section onClick={() => alert('History View (Coming soon)')} className="premium-card p-5 flex items-center justify-between cursor-pointer active:scale-[0.99] active:bg-zinc-50 transition-all hover:border-foreground group">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white border border-border flex items-center justify-center group-hover:border-foreground transition-colors">
-                            <History className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+                {/* History & Events */}
+                <div className="flex flex-col gap-4">
+                    <Link href={`/customers/${customer.id}/events/new`} className="w-full bg-foreground text-white border border-foreground py-3.5 flex items-center justify-center gap-2 font-normal tracking-widest uppercase text-[11px] transition-all hover:bg-[#222] active:bg-black active:scale-[0.99]">
+                        <Edit3 className="w-3.5 h-3.5" strokeWidth={1.5} />
+                        来店記録を追加 / ADD VISIT
+                    </Link>
+
+                    <section onClick={() => alert('History View (Coming soon)')} className="premium-card p-5 flex items-center justify-between cursor-pointer active:scale-[0.99] active:bg-zinc-50 transition-all hover:border-foreground group">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-white border border-border flex items-center justify-center group-hover:border-foreground transition-colors">
+                                <History className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <span className="font-normal text-foreground tracking-widest uppercase text-[12px]">History / 履歴</span>
+                                <span className="text-[10px] text-muted font-light tracking-wide">
+                                    {latestVisit
+                                        ? `前回のご来店: ${new Date(latestVisit.occurred_at).toLocaleDateString('ja-JP')} (${new Intl.NumberFormat('ja-JP').format(latestVisit.amount)}円)`
+                                        : '来店履歴なし'}
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex flex-col gap-1">
-                            <span className="font-normal text-foreground tracking-widest uppercase text-[12px]">History / 履歴</span>
-                            <span className="text-[10px] text-muted font-light tracking-wide">前回のご来店: 12日前</span>
-                        </div>
-                    </div>
-                    <ArrowLeft className="w-4 h-4 text-muted rotate-180" strokeWidth={1.5} />
-                </section>
+                        <ArrowLeft className="w-4 h-4 text-muted rotate-180" strokeWidth={1.5} />
+                    </section>
+                </div>
 
             </div>
         </div>

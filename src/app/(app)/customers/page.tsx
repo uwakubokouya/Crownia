@@ -1,19 +1,60 @@
 "use client"
 
-import { Search, Plus, ShieldAlert, Zap } from 'lucide-react'
+import { Search, Plus, ShieldAlert, Zap, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function CustomersPage() {
+    const [customers, setCustomers] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    useEffect(() => {
+        const fetchCustomers = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                const userId = user?.id || 'd1b54ac6-2244-4860-9dc4-177b9dcca967' // Fallback for dev
+
+                const { data, error } = await supabase
+                    .from('customers')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+
+                if (error) throw error
+                setCustomers(data || [])
+            } catch (err) {
+                console.error('Error fetching customers:', err)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchCustomers()
+    }, [])
+
+    const stageLabels: Record<string, string> = {
+        interest: '興味',
+        build: '関係構築',
+        trust: '信頼',
+        depend: '依存',
+        highvalue: '高単価'
+    };
+
     return (
-        <div className="flex flex-col gap-8 p-6 pt-12">
+        <div className="flex flex-col gap-8 p-6 pt-12 min-h-screen pb-24">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-light tracking-wide text-foreground uppercase">Clients</h1>
-                <button
-                    onClick={() => alert('Add New Client (Coming soon)')}
+                <Link
+                    href="/customers/new"
                     className="flex items-center justify-center bg-foreground text-white p-2 border border-foreground hover:bg-white hover:text-foreground active:scale-[0.95] active:bg-zinc-800 transition-all"
                 >
                     <Plus className="w-5 h-5" strokeWidth={1.5} />
-                </button>
+                </Link>
             </div>
 
             <div className="relative">
@@ -26,31 +67,30 @@ export default function CustomersPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-                {/* Mock Data for MVP Design */}
-                <CustomerCard
-                    id="1"
-                    name="佐藤 健一"
-                    stage="depend"
-                    stageLabel="依存"
-                    nextAction="「最近冷たいよね」"
-                    dangerLevel="critical"
-                />
-                <CustomerCard
-                    id="2"
-                    name="山田 太郎"
-                    stage="trust"
-                    stageLabel="信頼"
-                    nextAction="ボトルお礼フォロー"
-                    dangerLevel="safe"
-                />
-                <CustomerCard
-                    id="3"
-                    name="鈴木 一郎"
-                    stage="interest"
-                    stageLabel="興味"
-                    nextAction="次の休みの予定を探る"
-                    dangerLevel="caution"
-                />
+                {isLoading ? (
+                    <div className="flex justify-center p-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted" />
+                    </div>
+                ) : customers.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-4 py-12 text-center border border-dashed border-border p-6">
+                        <p className="text-[13px] font-light text-muted">まだ顧客データがありません。</p>
+                        <Link href="/customers/new" className="text-[11px] uppercase tracking-widest bg-white border border-border px-4 py-2 hover:border-foreground transition-colors">
+                            REGISTER NEW CLIENT
+                        </Link>
+                    </div>
+                ) : (
+                    customers.map((c) => (
+                        <CustomerCard
+                            key={c.id}
+                            id={c.id}
+                            name={c.display_name}
+                            stage={c.stage}
+                            stageLabel={stageLabels[c.stage] || c.stage}
+                            nextAction={c.danger_level === 'critical' ? '早急なフォローアップが必要です' : 'LINEで探りを入れる'}
+                            dangerLevel={c.danger_level}
+                        />
+                    ))
+                )}
             </div>
         </div>
     )
