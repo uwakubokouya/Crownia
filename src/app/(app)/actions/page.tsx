@@ -1,17 +1,47 @@
 "use client"
 
-import { Zap, TrendingUp, Shield, CheckCircle2 } from 'lucide-react'
-import { useState } from 'react'
+import { Zap, TrendingUp, Shield, CheckCircle2, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function ActionsPage() {
     const [filter, setFilter] = useState('すべて')
+    const [tickets, setTickets] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(true)
 
-    const tickets = [
-        { id: 1, customer: "佐藤 健一", type: "attack", title: "ボトルのオーダー打診", time: "22:30", probability: 75 },
-        { id: 2, customer: "高橋 誠", type: "growth", title: "「信頼」から「依存」へ昇格", time: "18:00", probability: 82 },
-        { id: 3, customer: "鈴木 一郎", type: "defense", title: "失客防止のジャブ", time: "20:00", probability: 90 },
-    ]
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    useEffect(() => {
+        const fetchActions = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('ai_recommendations')
+                    .select('*, customers(display_name)')
+                    .order('created_at', { ascending: false })
+
+                if (error) throw error
+
+                const formatted = (data || []).map((d: any) => ({
+                    id: d.customer_id, // We link to the customer ID
+                    customer: d.customers?.display_name || '顧客名未設定',
+                    type: d.category,
+                    title: d.goal || 'アクション未設定',
+                    time: d.suggested_send_time_window || '未定',
+                    probability: d.probability || 0
+                }))
+                setTickets(formatted)
+            } catch (err) {
+                console.error('Error fetching actions:', err)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        fetchActions()
+    }, [supabase])
 
     const filteredTickets = filter === 'すべて'
         ? tickets
@@ -35,21 +65,26 @@ export default function ActionsPage() {
             </div>
 
             <div className="flex flex-col gap-4 mt-2">
-                {filteredTickets.map(ticket => (
-                    <ActionTicket
-                        key={ticket.id}
-                        id={ticket.id}
-                        customer={ticket.customer}
-                        type={ticket.type}
-                        title={ticket.title}
-                        time={ticket.time}
-                        probability={ticket.probability}
-                    />
-                ))}
-                {filteredTickets.length === 0 && (
+                {isLoading ? (
+                    <div className="flex justify-center p-12">
+                        <Loader2 className="w-6 h-6 animate-spin text-muted" />
+                    </div>
+                ) : filteredTickets.length === 0 ? (
                     <div className="text-center p-8 border border-border mt-4">
                         <p className="text-xs text-muted tracking-widest uppercase">No Actions Found</p>
                     </div>
+                ) : (
+                    filteredTickets.map(ticket => (
+                        <ActionTicket
+                            key={ticket.id}
+                            id={ticket.id}
+                            customer={ticket.customer}
+                            type={ticket.type}
+                            title={ticket.title}
+                            time={ticket.time}
+                            probability={ticket.probability}
+                        />
+                    ))
                 )}
             </div>
         </div>
