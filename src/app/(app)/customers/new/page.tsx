@@ -55,9 +55,15 @@ export default function NewCustomerPage() {
             } else {
                 router.push('/customers')
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error adding customer:', error)
-            alert('エラーが発生しました。ログイン状態を確認してください。')
+
+            // Handle unique constraint violation (duplicate customer name)
+            if (error.code === '23505' || error.message?.includes('duplicate key value')) {
+                alert('このお名前は既に登録されています。別のお名前（または苗字＋名前など）で登録してください。');
+            } else {
+                alert('エラーが発生しました。ログイン状態を確認してください。')
+            }
         } finally {
             setIsLoading(false)
         }
