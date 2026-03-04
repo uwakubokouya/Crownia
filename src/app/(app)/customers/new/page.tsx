@@ -45,7 +45,7 @@ export default function NewCustomerPage() {
                         notes: memo.trim()
                     }
                 ])
-                .select()
+                .select('id')
                 .single()
 
             if (error) throw error
