@@ -1,22 +1,22 @@
-import { Search, Plus, ThumbsUp, ShieldAlert, Zap } from 'lucide-react'
+import { Search, Plus, ShieldAlert, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 export default function CustomersPage() {
     return (
         <div className="flex flex-col gap-6 p-6 pt-10">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold tracking-tight text-primary">お客様一覧 👩‍❤️‍👨</h1>
-                <button className="flex items-center justify-center bg-primary text-white p-2.5 rounded-2xl hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30">
+                <h1 className="text-2xl font-bold tracking-wider text-foreground">お客様一覧</h1>
+                <button className="flex items-center justify-center bg-primary text-white p-2.5 rounded-xl hover:bg-primary/90 transition-colors shadow-[0_4px_15px_-3px_rgba(197,160,89,0.3)]">
                     <Plus className="w-5 h-5" />
                 </button>
             </div>
 
             <div className="relative">
-                <Search className="absolute left-4 top-3.5 h-5 w-5 text-stone-300" />
+                <Search className="absolute left-4 top-3.5 h-5 w-5 text-muted" />
                 <input
                     type="text"
                     placeholder="名前やタグで検索..."
-                    className="w-full bg-white border border-stone-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-2xl pl-12 pr-4 py-3.5 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-200 text-stone-700 transition-all font-bold"
+                    className="w-full bg-white border border-border shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] rounded-xl pl-12 pr-4 py-3.5 placeholder-muted/60 focus:outline-none focus:ring-1 focus:ring-primary/50 text-foreground transition-all font-medium"
                 />
             </div>
 
@@ -56,47 +56,47 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
     const isCaution = dangerLevel === 'caution'
 
     const stageColors: Record<string, string> = {
-        interest: 'bg-stone-50 text-stone-500',
-        build: 'bg-blue-50 text-blue-500',
-        trust: 'bg-emerald-50 text-emerald-600',
-        depend: 'bg-rose-50 text-rose-500',
-        highvalue: 'bg-amber-50 text-amber-500' // Gold-like
+        interest: 'bg-stone-50 text-stone-500 border border-border/80',
+        build: 'bg-primary-light text-primary-dark border border-primary/20',
+        trust: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+        depend: 'bg-primary/10 text-primary border border-primary/30',
+        highvalue: 'bg-gradient-to-r from-[#D4AF37]/10 to-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30'
     }
 
     return (
         <Link href={`/customers/${id}`} className="premium-card p-4 flex flex-col gap-4 relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer active:scale-[0.99]">
             {isCritical && (
-                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-rose-100/50 to-transparent pointer-events-none" />
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-red-100/30 to-transparent pointer-events-none" />
             )}
 
             <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-1.5">
-                    <h3 className="text-lg font-black text-stone-800 tracking-tight">{name}</h3>
-                    <span className={`text-[10px] font-black px-3 py-1 rounded-full w-fit tracking-wider ${stageColors[stage] || stageColors.interest}`}>
+                    <h3 className="text-lg font-bold text-foreground tracking-wide">{name}</h3>
+                    <span className={`text-[9px] font-bold px-3 py-1 rounded-sm w-fit tracking-widest ${stageColors[stage] || stageColors.interest}`}>
                         {stageLabel}
                     </span>
                 </div>
 
                 {isCritical && (
-                    <div className="flex items-center gap-1.5 bg-rose-50 px-3 py-1.5 rounded-xl text-rose-500 border border-rose-100">
-                        <ShieldAlert className="w-3.5 h-3.5" />
-                        <span className="text-[10px] uppercase font-black tracking-widest">要注意</span>
+                    <div className="flex items-center gap-1 bg-red-50 px-2 py-1 rounded-sm text-red-600 border border-red-100">
+                        <ShieldAlert className="w-3 h-3" />
+                        <span className="text-[9px] uppercase font-bold tracking-widest">要注意</span>
                     </div>
                 )}
                 {isCaution && (
-                    <div className="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl text-amber-600 border border-amber-100">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span className="text-[10px] uppercase font-black tracking-widest">警戒</span>
+                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-sm text-amber-600 border border-amber-100">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span className="text-[9px] uppercase font-bold tracking-widest">警戒</span>
                     </div>
                 )}
             </div>
 
-            <div className="pt-3 border-t border-stone-100 flex items-center justify-between">
+            <div className="pt-3 border-t border-border/60 flex items-center justify-between">
                 <div className="flex flex-col gap-1">
-                    <span className="text-[9px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                        <Zap className="w-3 h-3 text-rose-400 fill-rose-400/20" /> 次のアクション
+                    <span className="text-[9px] text-muted font-bold uppercase tracking-widest flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-primary fill-primary/20" /> 次のアクション
                     </span>
-                    <span className="text-sm text-stone-700 font-bold tracking-wide line-clamp-1">{nextAction}</span>
+                    <span className="text-sm text-foreground/80 font-medium tracking-wide line-clamp-1">{nextAction}</span>
                 </div>
             </div>
         </Link>
