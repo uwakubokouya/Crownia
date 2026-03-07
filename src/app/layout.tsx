@@ -9,7 +9,7 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "Crownia - 売れっ子キャバ嬢の頭脳",
+  title: "Crownia",
   description: "キャバ嬢向けAI搭載顧客管理アプリ",
 };
 

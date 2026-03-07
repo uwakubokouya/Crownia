@@ -13,10 +13,14 @@ export function UpgradeButton({ currentPlan }: { currentPlan: string }) {
             onClick={async () => {
                 setIsLoading(true)
                 try {
+                    const targetPriceId = currentPlan === 'free'
+                        ? process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID
+                        : process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID;
+
                     const res = await fetch('/api/stripe/checkout', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || 'price_placeholder' })
+                        body: JSON.stringify({ priceId: targetPriceId || 'price_placeholder' })
                     })
                     const data = await res.json()
                     if (data.url) {
