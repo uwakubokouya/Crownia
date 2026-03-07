@@ -4,6 +4,7 @@ import { Zap, TrendingUp, Shield, CheckCircle2, Loader2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
+import { calculateCustomerPriorityScore, PriorityScoreCustomer } from '@/lib/utils/priority'
 
 export default function ActionsPage() {
     const [filter, setFilter] = useState('すべて')
@@ -18,6 +19,10 @@ export default function ActionsPage() {
     useEffect(() => {
         const fetchActions = async () => {
             try {
+                // Get User Custom Config for Priority
+                const { data: { user } } = await supabase.auth.getUser()
+                const customPriorityConfig = user?.user_metadata?.priority_settings
+
                 const { data, error } = await supabase
                     .from('ai_recommendations')
                     .select('*, customers(display_name)')
@@ -25,14 +30,89 @@ export default function ActionsPage() {
 
                 if (error) throw error
 
-                const formatted = (data || []).map((d: any) => ({
-                    id: d.customer_id, // We link to the customer ID
-                    customer: d.customers?.display_name || '顧客名未設定',
-                    type: d.category,
-                    title: d.goal || 'アクション未設定',
-                    time: d.suggested_send_time_window || '未定',
-                    probability: d.probability || 0
-                }))
+                // Fetch latest summaries to get priority categories
+                const { data: summaryData } = await supabase
+                    .from('conversation_summaries')
+                    .select('customer_id, inferred_features')
+                    .order('created_at', { ascending: false })
+
+                // Create a map of customer_id -> priority_category & next_action
+                const summaryStats = new Map();
+                if (summaryData) {
+                    for (const s of summaryData) {
+                        if (!summaryStats.has(s.customer_id) && s.inferred_features) {
+                            summaryStats.set(s.customer_id, s.inferred_features);
+                        }
+                    }
+                }
+
+                // Fetch customers and visits for scoring
+                const [customersRes, eventsRes] = await Promise.all([
+                    supabase.from('customers').select('id, stage, danger_level, current_type'),
+                    supabase.from('events').select('customer_id, occurred_at').eq('type', 'visit')
+                ])
+
+                const visitStats = new Map<string, { count: number, latest: string }>()
+                if (eventsRes.data) {
+                    eventsRes.data.forEach(ev => {
+                        const existing = visitStats.get(ev.customer_id)
+                        if (!existing) {
+                            visitStats.set(ev.customer_id, { count: 1, latest: ev.occurred_at })
+                        } else {
+                            existing.count++
+                            if (new Date(ev.occurred_at) > new Date(existing.latest)) {
+                                existing.latest = ev.occurred_at
+                            }
+                        }
+                    })
+                }
+
+                const customerMap = new Map<string, any>()
+                if (customersRes.data) {
+                    customersRes.data.forEach(c => customerMap.set(c.id, c))
+                }
+
+                // Filter to only Priority Recommendations
+                const seenCustomerIds = new Set();
+                const prioritizedRecs = (data || []).filter((d: any) => {
+                    if (seenCustomerIds.has(d.customer_id)) return false; // Only one per customer
+
+                    const aiStats = summaryStats.get(d.customer_id);
+                    if (aiStats && d.category === aiStats.priority_category) {
+                        seenCustomerIds.add(d.customer_id);
+                        return true;
+                    }
+                    return false;
+                });
+
+                // Map to formatted tickets WITH calculated scores
+                const formatted = prioritizedRecs.map((d: any) => {
+                    const c = customerMap.get(d.customer_id) || {}
+                    const vStats = visitStats.get(d.customer_id)
+                    const aiStats = summaryStats.get(d.customer_id)
+
+                    const scoreObj: PriorityScoreCustomer = {
+                        id: d.customer_id,
+                        display_name: d.customers?.display_name || '',
+                        stage: c.stage || 'interest',
+                        danger_level: c.danger_level,
+                        visit_count: vStats?.count || 0,
+                        last_visit_date: vStats?.latest,
+                    }
+                    const score = calculateCustomerPriorityScore(scoreObj, customPriorityConfig)
+
+                    return {
+                        id: d.id, // Use recommendation ID for unique keys
+                        customerId: d.customer_id, // Keep customer ID for routing
+                        customer: d.customers?.display_name || '顧客名未設定',
+                        type: d.category,
+                        title: d.goal || 'アクション未設定',
+                        time: d.suggested_send_time_window || '未定',
+                        probability: d.probability || 0,
+                        score: score
+                    }
+                }).sort((a, b) => b.score - a.score) // Sort highest score first
+
                 setTickets(formatted)
             } catch (err) {
                 console.error('Error fetching actions:', err)
@@ -77,12 +157,13 @@ export default function ActionsPage() {
                     filteredTickets.map(ticket => (
                         <ActionTicket
                             key={ticket.id}
-                            id={ticket.id}
+                            id={ticket.customerId} // use customerId for routing
                             customer={ticket.customer}
                             type={ticket.type}
                             title={ticket.title}
                             time={ticket.time}
                             probability={ticket.probability}
+                            score={ticket.score}
                         />
                     ))
                 )}
@@ -109,7 +190,7 @@ function FilterChip({ label, active, icon, onClick }: any) {
     )
 }
 
-function ActionTicket({ id, customer, type, title, time, probability }: any) {
+function ActionTicket({ id, customer, type, title, time, probability, score }: any) {
     const typeConfig: any = {
         attack: {
             label: 'ATTACK / 攻め',
@@ -137,7 +218,10 @@ function ActionTicket({ id, customer, type, title, time, probability }: any) {
                     </div>
                     <div className="flex flex-col gap-1">
                         <span className={`text-[9px] font-normal tracking-widest uppercase ${isAttack ? 'text-rose-600/80' : 'text-muted'}`}>{conf.label}</span>
-                        <span className={`text-[15px] font-normal tracking-wide ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{customer}</span>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-[15px] font-normal tracking-wide ${isAttack ? 'text-rose-900' : 'text-foreground'}`}>{customer}</span>
+                            <span className={`text-[8px] px-1.5 py-0.5 border font-normal uppercase ${isAttack ? 'border-rose-200 text-rose-600 bg-white' : 'border-border text-muted bg-white'}`}>優先度: {score}pt</span>
+                        </div>
                     </div>
                 </div>
                 <div className={`w-8 h-8 flex items-center justify-center transition-colors group-hover:scale-105 ${isAttack ? 'text-rose-600 border-rose-200 group-hover:bg-rose-600 group-hover:text-white' : 'text-muted border-border group-hover:bg-foreground group-hover:text-white group-hover:border-foreground'} border rounded-none`}>

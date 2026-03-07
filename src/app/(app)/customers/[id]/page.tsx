@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState, use, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 
 import { useRouter } from 'next/navigation'
@@ -16,6 +16,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const [isEditingMemo, setIsEditingMemo] = useState(false)
     const [memoInput, setMemoInput] = useState('')
     const [isSavingMemo, setIsSavingMemo] = useState(false)
+    const [actionCards, setActionCards] = useState<any[]>([])
+    const [priorityData, setPriorityData] = useState<{ category?: string, nextAction?: string } | null>(null)
+    const isGeneratingCards = useRef(false)
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,9 +40,15 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                     .from('customers')
                     .select('*')
                     .eq('id', resolvedParams.id)
-                    .single()
+                    .maybeSingle()
 
                 if (customerError) throw customerError
+                if (!customerData) {
+                    setCustomer(null)
+                    setIsLoading(false)
+                    return
+                }
+
                 setCustomer(customerData)
                 setMemoInput(customerData.notes || '')
 
@@ -55,8 +64,36 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 if (!visitError && visitData && visitData.length > 0) {
                     setLatestVisit(visitData[0])
                 }
-            } catch (err) {
-                console.error('Error fetching customer details:', err)
+
+                // Fetch AI recommendations
+                const { data: aiData, error: aiError } = await supabase
+                    .from('ai_recommendations')
+                    .select('*')
+                    .eq('customer_id', resolvedParams.id)
+                    .order('category', { ascending: true }) // simple order
+
+                if (aiError) throw aiError
+
+                if (aiData && aiData.length > 0) {
+                    setActionCards(aiData)
+                }
+
+                // Fetch latest priority and next action
+                const { data: summaryData } = await supabase
+                    .from('conversation_summaries')
+                    .select('inferred_features')
+                    .eq('customer_id', resolvedParams.id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+
+                if (summaryData && summaryData.length > 0 && summaryData[0].inferred_features) {
+                    setPriorityData({
+                        category: summaryData[0].inferred_features.priority_category,
+                        nextAction: summaryData[0].inferred_features.next_action
+                    })
+                }
+            } catch (err: any) {
+                console.error('Error fetching customer details:', err.message || err)
             } finally {
                 setIsLoading(false)
             }
@@ -179,41 +216,50 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                         </h2>
                     </div>
 
-                    {/* Attack Card */}
-                    <ActionDetailCard
-                        title="攻め (売上UP)"
-                        goal="ボトルのオーダー"
-                        probability={75}
-                        reason="承認欲求が高まっており、他卓への対抗心から高額ボトルが期待できる。"
-                        message="〇〇さんの席が一番落ち着くかも。いつもありがとうね"
-                        time="22:30"
-                        icon={<Zap className="w-4 h-4 text-rose-600" strokeWidth={1.5} />}
-                        type="attack"
-                    />
+                    {priorityData?.nextAction && (
+                        <div className="premium-card p-5 bg-foreground text-white mb-2">
+                            <span className="text-[9px] font-normal tracking-widest uppercase text-zinc-400 block mb-2 border-b border-zinc-800 pb-2">NEXT ACTION / 次のアクション</span>
+                            <p className="text-[14px] font-light leading-relaxed">{priorityData.nextAction}</p>
+                        </div>
+                    )}
 
-                    {/* Growth Card */}
-                    <ActionDetailCard
-                        title="成長 (関係強化)"
-                        goal="依存段階の定着"
-                        probability={90}
-                        reason="最近の返信速度が上がっているため、特別感を演出して本指名を確固たるものに。"
-                        message="さっき起きたんだけど、一番に〇〇さんにLINEしちゃった"
-                        time="14:00"
-                        icon={<TrendingUp className="w-4 h-4 text-foreground" strokeWidth={1.5} />}
-                        type="growth"
-                    />
+                    {actionCards && actionCards.length > 0 ? (
+                        actionCards.map((card: any) => {
+                            let icon = <TrendingUp className="w-4 h-4 text-foreground" strokeWidth={1.5} />
+                            if (card.category === 'attack') icon = <Zap className="w-4 h-4 text-rose-600" strokeWidth={1.5} />
+                            if (card.category === 'defense') icon = <Shield className="w-4 h-4 text-muted" strokeWidth={1.5} />
 
-                    {/* Defense Card */}
-                    <ActionDetailCard
-                        title="防御 (失客防止)"
-                        goal="次回来店の確約"
-                        probability={85}
-                        reason="来店周期が20日を超えたため、軽いジャブで存在をアピール。"
-                        message="最近忙しい？無理しないでね"
-                        time="20:00"
-                        icon={<Shield className="w-4 h-4 text-muted" strokeWidth={1.5} />}
-                        type="defense"
-                    />
+                            let title = '成長 (関係強化)'
+                            if (card.category === 'attack') title = '攻め (売上UP)'
+                            if (card.category === 'defense') title = '防御 (失客防止)'
+
+                            const isPriority = card.category === priorityData?.category;
+
+                            return (
+                                <ActionDetailCard
+                                    key={card.id}
+                                    title={title}
+                                    goal={card.goal}
+                                    probability={card.probability}
+                                    reason={card.reason_lines?.[0] || ''}
+                                    message={card.suggested_message_text}
+                                    time={card.suggested_send_time_window}
+                                    icon={icon}
+                                    type={card.category}
+                                    isPriority={isPriority}
+                                />
+                            )
+                        })
+                    ) : (
+                        <div className="text-center p-8 bg-zinc-50 border border-border mt-4">
+                            <p className="text-[11px] text-muted tracking-widest font-normal uppercase mb-2">
+                                NO STRATEGIES FOUND
+                            </p>
+                            <p className="text-[10px] text-muted tracking-wide font-light">
+                                LINE解析を行って最新の戦略を生成してください。
+                            </p>
+                        </div>
+                    )}
                 </section>
 
                 {/* Notes */}
@@ -295,7 +341,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     )
 }
 
-function ActionDetailCard({ title, goal, probability, reason, message, time, icon, type }: any) {
+function ActionDetailCard({ title, goal, probability, reason, message, time, icon, type, isPriority }: any) {
     const isAttack = type === 'attack';
     const cardBg = isAttack ? 'bg-rose-50 text-rose-900' : 'bg-white text-foreground';
     const borderClass = isAttack ? 'border-rose-200' : 'border-border';
@@ -308,8 +354,14 @@ function ActionDetailCard({ title, goal, probability, reason, message, time, ico
     };
 
     return (
-        <div className={`premium-card p-6 ${cardBg} ${borderClass} relative transition-all group`}>
-            <div className="flex items-start justify-between mb-6">
+        <div className={`premium-card p-6 ${cardBg} ${isPriority ? 'border-black border-[2px]' : borderClass} relative transition-all group overflow-hidden`}>
+            {isPriority && (
+                <div className="absolute top-0 right-0 bg-black text-white text-[9px] px-3 py-1 font-normal tracking-widest flex items-center gap-1 z-10">
+                    ★ 優先度スコア / 最優先
+                </div>
+            )}
+
+            <div className={`flex items-start justify-between mb-6 ${isPriority ? 'pt-4' : ''}`}>
                 <div className="flex items-center gap-4">
                     <div className={`p-2 border ${borderClass} ${iconWrapper}`}>
                         {icon}

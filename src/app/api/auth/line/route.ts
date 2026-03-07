@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
     // We can infer the redirect URI from the request URL if not provided
     const { origin } = new URL(request.url)
-    const redirectUri = process.env.LINE_REDIRECT_URI || `${origin}/api/auth/callback/line`
+    const redirectUri = process.env.LINE_REDIRECT_URI || `${origin}/api/auth/line/callback`
 
     // Local Development Bypass for dummy credentials
     if (!clientId || clientId === 'dummy_line_id' || clientId === 'your_line_client_id') {

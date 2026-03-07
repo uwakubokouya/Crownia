@@ -33,6 +33,30 @@ export default function NewCustomerPage() {
                 throw new Error('Not authenticated')
             }
 
+            // --- Customer Limit Check ---
+            // For now, if no plan is set, default to 'free'
+            const plan = user?.user_metadata?.plan || 'free'
+            const limits: Record<string, number> = {
+                free: 5,
+                basic: 15,
+                pro: 30
+            }
+            const limit = limits[plan as keyof typeof limits] || 5
+
+            const { count, error: countError } = await supabase
+                .from('customers')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userId)
+
+            if (countError) throw countError
+
+            if (count !== null && count >= limit) {
+                alert(`現在のプラン（${plan.toUpperCase()}）の登録上限（${limit}名）に達しています。\nさらに登録するには、設定画面から上位プランへアップグレードしてください。`)
+                setIsLoading(false)
+                return
+            }
+            // --- End Limit Check ---
+
             const response = await supabase
                 .from('customers')
                 .insert([

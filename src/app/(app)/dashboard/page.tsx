@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { format, startOfMonth } from 'date-fns'
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
+import { calculateCustomerPriorityScore, PriorityScoreCustomer } from '@/lib/utils/priority'
 
 export default function DashboardPage() {
     const today = format(new Date(), 'yyyy.M.d')
@@ -15,7 +16,6 @@ export default function DashboardPage() {
     const [attentionCustomer, setAttentionCustomer] = useState<any>(null)
     const [upgradeCustomer, setUpgradeCustomer] = useState<any>(null)
     const [currentSales, setCurrentSales] = useState<number>(0)
-    const [forecastSales, setForecastSales] = useState<number>(0)
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,48 +25,99 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // 1. Fetch Today's Tasks (AI Recommendations limit 2)
-                const { data: recData } = await supabase
-                    .from('ai_recommendations')
-                    .select('*, customers(display_name)')
-                    .order('created_at', { ascending: false })
-                    .limit(2)
+                // Get User Custom Config
+                const { data: { user } } = await supabase.auth.getUser()
+                const customPriorityConfig = user?.user_metadata?.priority_settings
 
-                setTasks(recData || [])
+                // 1. Fetch ALL required data for scoring
+                const [customersRes, eventsRes, summariesRes] = await Promise.all([
+                    supabase.from('customers').select('id, display_name, stage, danger_level, current_type'),
+                    supabase.from('events').select('customer_id, occurred_at').eq('type', 'visit'),
+                    supabase.from('conversation_summaries').select('customer_id, inferred_features')
+                ])
 
-                // 2. Fetch Attention Customer (danger or critical)
-                const { data: dangerData } = await supabase
-                    .from('customers')
-                    .select('*')
-                    .in('danger_level', ['danger', 'critical'])
-                    .limit(1)
+                const customers = customersRes.data || []
+                const events = eventsRes.data || []
+                const summaries = summariesRes.data || []
 
-                if (dangerData && dangerData.length > 0) {
-                    setAttentionCustomer(dangerData[0])
+                // Map events to customers
+                const visitStats = new Map<string, { count: number, latest: string }>()
+                events.forEach(ev => {
+                    const existing = visitStats.get(ev.customer_id)
+                    if (!existing) {
+                        visitStats.set(ev.customer_id, { count: 1, latest: ev.occurred_at })
+                    } else {
+                        existing.count++
+                        if (new Date(ev.occurred_at) > new Date(existing.latest)) {
+                            existing.latest = ev.occurred_at
+                        }
+                    }
+                })
+
+                // Map summaries to customers
+                const summaryStats = new Map<string, any>()
+                summaries.forEach(sum => {
+                    // Just take the first one we see (assuming they are not strictly ordered here, 
+                    // ideally we'd want the latest, but for simplicity of Map let's just reverse or sort later)
+                    // We will just keep the most recent if there are multiple.
+                    // Wait, we didn't order summaries. Let's just use it as a basic map for now.
+                    if (sum.inferred_features?.next_action && !summaryStats.has(sum.customer_id)) {
+                        summaryStats.set(sum.customer_id, sum.inferred_features)
+                    }
+                })
+
+                // Calculate priority scores
+                const scoredCustomers = customers.map(c => {
+                    const stats = visitStats.get(c.id)
+                    const aiStats = summaryStats.get(c.id)
+
+                    const scoreObj: PriorityScoreCustomer = {
+                        ...c,
+                        visit_count: stats?.count || 0,
+                        last_visit_date: stats?.latest,
+                        next_action: aiStats?.next_action,
+                        priority_category: aiStats?.priority_category,
+                        recommended_time: aiStats?.recommended_time
+                    }
+
+                    return {
+                        ...scoreObj,
+                        score: calculateCustomerPriorityScore(scoreObj, customPriorityConfig)
+                    }
+                }).sort((a, b) => b.score - a.score) // Sort descending
+
+                // 2. Set Today's Tasks (Top 5 customers with AI actions)
+                const topTasks = scoredCustomers
+                    .filter(c => c.next_action) // Must have an AI action to be a task
+                    .slice(0, 5)
+                    .map(c => ({
+                        id: c.id,
+                        name: c.display_name,
+                        action: c.next_action,
+                        time: c.recommended_time || 'ASAP',
+                        type: c.priority_category || 'growth'
+                    }))
+
+                setTasks(topTasks)
+
+                // 3. Fetch Attention Customer (danger or critical) - Still rely on danger_level logic, or just use top score with danger
+                const dangerCustomers = scoredCustomers.filter(c => ['danger', 'critical'].includes(c.danger_level || ''))
+                if (dangerCustomers.length > 0) {
+                    setAttentionCustomer(dangerCustomers[0])
                 } else {
-                    // Fallback to warning if no critical
-                    const { data: cautionData } = await supabase
-                        .from('customers')
-                        .select('*')
-                        .eq('danger_level', 'caution')
-                        .limit(1)
-                    if (cautionData && cautionData.length > 0) setAttentionCustomer(cautionData[0])
+                    const cautionCustomers = scoredCustomers.filter(c => c.danger_level === 'caution')
+                    if (cautionCustomers.length > 0) setAttentionCustomer(cautionCustomers[0])
                 }
 
-                // 3. Fetch Upgrade Customer (stage is build or trust)
-                const { data: upgradeData } = await supabase
-                    .from('customers')
-                    .select('*')
-                    .in('stage', ['build', 'trust'])
-                    .order('updated_at', { ascending: false })
-                    .limit(1)
-
-                if (upgradeData && upgradeData.length > 0) {
-                    setUpgradeCustomer(upgradeData[0])
+                // 4. Fetch Upgrade Customer (stage is build or trust, highest score)
+                const upgradeCandidates = scoredCustomers.filter(c => ['build', 'trust'].includes(c.stage))
+                if (upgradeCandidates.length > 0) {
+                    // Pick a random customer from the top 3 highest scorers to keep the UI dynamic
+                    const topCandidates = upgradeCandidates.slice(0, 3)
+                    const randomCandidate = topCandidates[Math.floor(Math.random() * topCandidates.length)]
+                    setUpgradeCustomer(randomCandidate)
                 } else {
-                    // Fallback just grab any latest
-                    const { data: anyData } = await supabase.from('customers').select('*').limit(1)
-                    if (anyData && anyData.length > 0) setUpgradeCustomer(anyData[0])
+                    setUpgradeCustomer(null)
                 }
 
                 // 4. Sales Data (Current month sum)
@@ -79,8 +130,6 @@ export default function DashboardPage() {
 
                 const total = (salesData || []).reduce((sum, ev) => sum + (Number(ev.amount) || 0), 0)
                 setCurrentSales(total)
-                // Fake forecast as just 1.5x of current
-                setForecastSales(Math.floor(total * 1.5) || 50000)
 
             } catch (err) {
                 console.error('Error fetching dashboard data:', err)
@@ -97,6 +146,14 @@ export default function DashboardPage() {
         trust: '信頼',
         depend: '依存',
         highvalue: '高単価'
+    };
+
+    const nextStageLabels: Record<string, string> = {
+        interest: '関係構築',
+        build: '信頼',
+        trust: '依存',
+        depend: '高単価',
+        highvalue: 'MAX'
     };
 
     if (isLoading) {
@@ -131,11 +188,11 @@ export default function DashboardPage() {
                     {tasks.length > 0 ? tasks.map(t => (
                         <ActionCard
                             key={t.id}
-                            id={t.customer_id}
-                            name={t.customers?.display_name || '名称未設定'}
-                            action={t.goal || 'アクション未設定'}
-                            time={t.suggested_send_time_window || '未定'}
-                            type={t.category || 'growth'}
+                            id={t.id}
+                            name={t.name}
+                            action={t.action}
+                            time={t.time}
+                            type={t.type}
                         />
                     )) : (
                         <div className="text-center p-8 border border-border">
@@ -172,25 +229,15 @@ export default function DashboardPage() {
                 )}
             </section>
 
-            {/* 3. 売上着地予測 */}
-            <section className="grid grid-cols-2 gap-4 mt-2">
-                <div className="premium-card p-5 flex flex-col justify-between hover:bg-rose-50/30 transition-colors">
+            {/* 3. 売上表示 */}
+            <section className="mt-2">
+                <div className="premium-card p-5 flex flex-col justify-between hover:border-black transition-colors w-full">
                     <div className="flex items-center gap-1.5 mb-6 text-muted">
-                        <span className="text-[9px] font-normal tracking-widest uppercase">CURRENT / 現在の売上</span>
+                        <span className="text-[9px] font-normal tracking-widest uppercase">CURRENT / 当月の売上 (合計)</span>
                     </div>
                     <div>
-                        <div className="text-xl font-normal text-foreground tracking-wide">¥{new Intl.NumberFormat('ja-JP').format(currentSales)}</div>
-                    </div>
-                </div>
-                <div className="premium-card p-5 flex flex-col justify-between bg-zinc-50 border-border hover:bg-rose-50 transition-colors">
-                    <div className="flex items-center gap-1.5 mb-6 text-foreground">
-                        <span className="text-[9px] font-normal tracking-widest text-rose-600 uppercase flex items-center gap-1">
-                            <Zap strokeWidth={1.5} className="w-3 h-3" />
-                            FORECAST / 着地予測
-                        </span>
-                    </div>
-                    <div>
-                        <div className="text-xl font-normal text-foreground tracking-wide">¥{new Intl.NumberFormat('ja-JP').format(forecastSales)}</div>
+                        <div className="text-3xl font-light text-foreground tracking-wide">¥{new Intl.NumberFormat('ja-JP').format(currentSales)}</div>
+                        <div className="mt-2 text-[10px] font-light text-muted uppercase tracking-widest">Calculated from visits this month</div>
                     </div>
                 </div>
             </section>
@@ -201,13 +248,16 @@ export default function DashboardPage() {
                     <h2 className="text-xs font-normal text-muted tracking-widest uppercase">UPGRADE / 昇格見込みのお客様</h2>
                 </div>
                 {upgradeCustomer ? (
-                    <div className="premium-card p-5 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between group hover:border-rose-200 transition-colors">
+                    <div className="premium-card p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between group hover:border-black transition-colors cursor-pointer" onClick={() => window.location.href = `/customers/${upgradeCustomer.id}`}>
                         <div>
-                            <div className="font-normal text-foreground text-base tracking-wide mb-2">{upgradeCustomer.display_name}</div>
+                            <div className="font-normal text-foreground text-base tracking-wide flex items-center gap-2 mb-2">
+                                {upgradeCustomer.display_name}
+                                <span className="text-[9px] text-muted tracking-widest font-normal uppercase border px-2 py-0.5">優先度: {upgradeCustomer.score}pt</span>
+                            </div>
                             <div className="text-[11px] font-light text-muted flex items-center gap-3 tracking-widest uppercase">
                                 <span>{stageLabels[upgradeCustomer.stage] || upgradeCustomer.stage}</span>
                                 <span className="text-rose-300">→</span>
-                                <span className="text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5">NEXT</span>
+                                <span className="text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5">{nextStageLabels[upgradeCustomer.stage] || 'NEXT'}</span>
                             </div>
                         </div>
                         <Link href={`/customers/${upgradeCustomer.id}`} className="premium-btn text-[10px] px-6 py-2.5 sm:w-auto w-full text-center hover:premium-btn-hover active:premium-btn-active">

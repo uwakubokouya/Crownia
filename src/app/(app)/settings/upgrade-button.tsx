@@ -36,7 +36,7 @@ export function UpgradeButton({ currentPlan }: { currentPlan: string }) {
             }}
             className="w-full premium-btn py-4 text-[11px] font-normal tracking-widest uppercase hover:premium-btn-hover active:premium-btn-active disabled:opacity-50 disabled:cursor-not-allowed border border-foreground bg-foreground text-white hover:bg-white hover:text-foreground transition-all"
         >
-            {isLoading ? 'PREPARING...' : 'UPGRADE TO PRO'}
+            {isLoading ? 'PREPARING...' : currentPlan === 'free' ? 'UPGRADE TO BASIC' : 'UPGRADE TO PRO'}
         </button>
     )
 }

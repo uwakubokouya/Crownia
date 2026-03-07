@@ -1,4 +1,4 @@
-import { User, CreditCard, ShieldCheck, HelpCircle, LogOut } from 'lucide-react'
+import { User, CreditCard, ShieldCheck, HelpCircle, LogOut, Zap } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { UpgradeButton } from './upgrade-button'
@@ -39,9 +39,11 @@ export default async function SettingsPage() {
                     </div>
                     <p className="text-[12px] text-muted font-light tracking-wide leading-relaxed mb-8">
                         {plan === 'pro' ? (
-                            <>すべての強力なAI機能が使い放題です。<br />専属コンサルタントとしてフルサポートします。</>
+                            <>顧客登録数 上限30名まで。<br />強力なAIモデル搭載の最上位プランです。<br />登録上限無制限をご希望の場合はサポートまでご連絡下さい。</>
+                        ) : plan === 'basic' ? (
+                            <>顧客登録数 上限15名まで。<br />上位AIモデル搭載プランです。</>
                         ) : (
-                            <>すべての基本AI機能をご利用いただけます。<br />もっと詳しい売上予測やLTV分析はProプランで。</>
+                            <>無料お試しプラン（顧客登録 上限5名まで）。<br />すべての基本AI機能をご利用いただけます。</>
                         )}
                     </p>
                     <UpgradeButton currentPlan={plan} />
@@ -51,6 +53,7 @@ export default async function SettingsPage() {
             {/* Menu Options */}
             <section className="flex flex-col gap-3">
                 <MenuRow icon={<User strokeWidth={1.5} />} label="プロフィール設定" />
+                <MenuRow icon={<Zap strokeWidth={1.5} />} label="AI優先度スコア設定" href="/settings/priority" />
                 <MenuRow icon={<CreditCard strokeWidth={1.5} />} label="お支払い管理" href="/api/stripe/portal" />
                 <MenuRow icon={<ShieldCheck strokeWidth={1.5} />} label="プライバシーとセキュリティ" />
                 <MenuRow icon={<HelpCircle strokeWidth={1.5} />} label="よくある質問・サポート" />
