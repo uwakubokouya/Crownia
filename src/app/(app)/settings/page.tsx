@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
 import { UpgradeButton } from './upgrade-button'
 import { LogoutButton } from './logout-button'
+import { TutorialReplayButton } from './tutorial-replay-button'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -52,11 +53,12 @@ export default async function SettingsPage() {
 
             {/* Menu Options */}
             <section className="flex flex-col gap-3">
-                <MenuRow icon={<User strokeWidth={1.5} />} label="プロフィール設定" />
+                <MenuRow icon={<User strokeWidth={1.5} />} label="プロフィール設定" href="/settings/profile" />
                 <MenuRow icon={<Zap strokeWidth={1.5} />} label="AI優先度スコア設定" href="/settings/priority" />
                 <MenuRow icon={<CreditCard strokeWidth={1.5} />} label="お支払い管理" href="/api/stripe/portal" />
-                <MenuRow icon={<ShieldCheck strokeWidth={1.5} />} label="プライバシーとセキュリティ" />
-                <MenuRow icon={<HelpCircle strokeWidth={1.5} />} label="よくある質問・サポート" />
+                <MenuRow icon={<ShieldCheck strokeWidth={1.5} />} label="プライバシーとセキュリティ" href="/settings/privacy" />
+                <MenuRow icon={<HelpCircle strokeWidth={1.5} />} label="よくある質問・サポート" href="/settings/support" />
+                <TutorialReplayButton />
             </section>
 
             {/* Logout */}

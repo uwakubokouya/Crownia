@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Plus, ShieldAlert, Zap, Loader2 } from 'lucide-react'
+import { Search, Plus, ShieldAlert, Zap, Loader2, Star, Filter } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
@@ -8,6 +8,9 @@ import { createBrowserClient } from '@supabase/ssr'
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [stageFilter, setStageFilter] = useState<string>('all')
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,6 +48,31 @@ export default function CustomersPage() {
         highvalue: '高単価'
     };
 
+    const toggleFavoriteList = async (e: React.MouseEvent, id: string, currentStatus: boolean) => {
+        e.preventDefault()
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .update({ is_favorite: !currentStatus })
+                .eq('id', id)
+            
+            if (error) throw error
+
+            setCustomers(prev => prev.map(c => 
+                c.id === id ? { ...c, is_favorite: !currentStatus } : c
+            ))
+        } catch (error) {
+            console.error('Failed to toggle favorite', error)
+        }
+    }
+
+    const filteredCustomers = customers.filter(c => {
+        if (showFavoritesOnly && !c.is_favorite) return false
+        if (stageFilter !== 'all' && c.stage !== stageFilter) return false
+        if (searchQuery && !c.display_name.toLowerCase().includes(searchQuery.toLowerCase())) return false
+        return true
+    })
+
     return (
         <div className="flex flex-col gap-8 p-6 pt-12 min-h-screen pb-24">
             <div className="flex items-center justify-between">
@@ -57,13 +85,43 @@ export default function CustomersPage() {
                 </Link>
             </div>
 
-            <div className="relative">
-                <Search className="absolute left-4 top-3.5 h-4 w-4 text-muted" strokeWidth={1.5} />
-                <input
-                    type="text"
-                    placeholder="Search by name or tag..."
-                    className="w-full bg-white border border-border rounded-none pl-12 pr-4 py-3 placeholder-muted focus:outline-none focus:border-foreground text-foreground transition-all font-light text-sm tracking-wide"
-                />
+            <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-3 h-4 w-4 text-muted" strokeWidth={1.5} />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Search by name..."
+                            className="w-full bg-white border border-border rounded-none pl-11 pr-4 py-2.5 placeholder-muted focus:outline-none focus:border-foreground text-foreground transition-all font-light text-[13px] tracking-wide"
+                        />
+                    </div>
+                    <button 
+                        onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                        className={`p-2.5 border transition-colors flex items-center justify-center ${showFavoritesOnly ? 'bg-yellow-50 border-yellow-200 text-yellow-600' : 'bg-white border-border text-muted hover:text-foreground hover:border-foreground'}`}
+                    >
+                        <Star className="w-4 h-4" strokeWidth={1.5} fill={showFavoritesOnly ? "currentColor" : "none"} />
+                    </button>
+                </div>
+                
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                    <button 
+                        onClick={() => setStageFilter('all')}
+                        className={`px-4 py-1.5 text-[10px] uppercase tracking-widest whitespace-nowrap border transition-colors ${stageFilter === 'all' ? 'bg-foreground text-white border-foreground' : 'bg-white text-muted border-border hover:border-foreground'}`}
+                    >
+                        ALL
+                    </button>
+                    {Object.entries(stageLabels).map(([val, label]) => (
+                        <button 
+                            key={val}
+                            onClick={() => setStageFilter(val)}
+                            className={`px-4 py-1.5 text-[10px] uppercase tracking-widest whitespace-nowrap border transition-colors ${stageFilter === val ? 'bg-foreground text-white border-foreground' : 'bg-white text-muted border-border hover:border-foreground'}`}
+                        >
+                            {label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -79,7 +137,7 @@ export default function CustomersPage() {
                         </Link>
                     </div>
                 ) : (
-                    customers.map((c) => (
+                    filteredCustomers.map((c) => (
                         <CustomerCard
                             key={c.id}
                             id={c.id}
@@ -88,6 +146,8 @@ export default function CustomersPage() {
                             stageLabel={stageLabels[c.stage] || c.stage}
                             nextAction={c.danger_level === 'critical' ? '早急なフォローアップが必要です' : 'LINEで探りを入れる'}
                             dangerLevel={c.danger_level}
+                            isFavorite={!!c.is_favorite}
+                            onToggleFav={(e) => toggleFavoriteList(e, c.id, !!c.is_favorite)}
                         />
                     ))
                 )}
@@ -96,7 +156,7 @@ export default function CustomersPage() {
     )
 }
 
-function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: { id: string, name: string, stage: string, stageLabel: string, nextAction: string, dangerLevel: string }) {
+function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel, isFavorite, onToggleFav }: { id: string, name: string, stage: string, stageLabel: string, nextAction: string, dangerLevel: string, isFavorite: boolean, onToggleFav: (e: any) => void }) {
     const isCritical = dangerLevel === 'critical'
     const isCaution = dangerLevel === 'caution'
 
@@ -116,7 +176,12 @@ function CustomerCard({ id, name, stage, stageLabel, nextAction, dangerLevel }: 
 
             <div className="flex items-start justify-between">
                 <div className="flex flex-col gap-2.5">
-                    <h3 className="text-lg font-normal text-foreground tracking-wide">{name}</h3>
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-normal text-foreground tracking-wide">{name}</h3>
+                        <button onClick={onToggleFav} className="p-1 hover:bg-zinc-100 text-muted hover:text-yellow-500 transition-colors">
+                            <Star className="w-4 h-4" strokeWidth={1.5} fill={isFavorite ? "currentColor" : "none"} color={isFavorite ? "#eab308" : "currentColor"} />
+                        </button>
+                    </div>
                     <span className={`text-[9px] font-normal px-3 py-1 border tracking-widest uppercase w-fit ${stageColors[stage] || stageColors.interest}`}>
                         {stageLabel}
                     </span>

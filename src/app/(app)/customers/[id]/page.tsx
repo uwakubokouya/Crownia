@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History, Loader2 } from 'lucide-react'
+import { ArrowLeft, Edit3, MessageCircle, MoreVertical, Zap, Shield, TrendingUp, History, Loader2, X, Sparkles, RefreshCw, Star } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState, use, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
@@ -17,7 +17,9 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     const [memoInput, setMemoInput] = useState('')
     const [isSavingMemo, setIsSavingMemo] = useState(false)
     const [actionCards, setActionCards] = useState<any[]>([])
-    const [priorityData, setPriorityData] = useState<{ category?: string, nextAction?: string } | null>(null)
+    const [priorityData, setPriorityData] = useState<{ category?: string, nextAction?: string, summaryText?: string, humanNature?: string } | null>(null)
+    const [isAiModalOpen, setIsAiModalOpen] = useState(false)
+    const [isRegenerating, setIsRegenerating] = useState(false)
     const isGeneratingCards = useRef(false)
 
     const supabase = createBrowserClient(
@@ -81,15 +83,17 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 // Fetch latest priority and next action
                 const { data: summaryData } = await supabase
                     .from('conversation_summaries')
-                    .select('inferred_features')
+                    .select('inferred_features, summary_text')
                     .eq('customer_id', resolvedParams.id)
                     .order('created_at', { ascending: false })
                     .limit(1)
 
-                if (summaryData && summaryData.length > 0 && summaryData[0].inferred_features) {
+                if (summaryData && summaryData.length > 0) {
                     setPriorityData({
-                        category: summaryData[0].inferred_features.priority_category,
-                        nextAction: summaryData[0].inferred_features.next_action
+                        category: summaryData[0].inferred_features?.priority_category,
+                        nextAction: summaryData[0].inferred_features?.next_action,
+                        summaryText: summaryData[0].summary_text,
+                        humanNature: summaryData[0].inferred_features?.human_nature
                     })
                 }
             } catch (err: any) {
@@ -100,6 +104,53 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         }
         fetchData()
     }, [resolvedParams.id, supabase])
+
+    const handleRegenerateAnalysis = async () => {
+        if (!customer) return;
+        setIsRegenerating(true);
+        
+        try {
+            // Get raw messages for this customer
+            const { data: messages, error: msgError } = await supabase
+                .from('messages')
+                .select('message_text')
+                .eq('customer_id', resolvedParams.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+
+            if (msgError) throw msgError;
+            
+            if (!messages || messages.length === 0) {
+                alert('LINEのトーク履歴が見つかりません。先にLINE解析からトーク履歴をインポートしてください。');
+                setIsRegenerating(false);
+                return;
+            }
+
+            const latestChatHistory = messages[0].message_text;
+
+            const res = await fetch('/api/ai/analyze-character', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customerId: resolvedParams.id,
+                    chatHistory: latestChatHistory
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => null);
+                throw new Error(errData?.error || 'Analysis failed');
+            }
+
+            // Reload the page to get the freshest data
+            window.location.reload();
+
+        } catch (error: any) {
+            console.error('Error regenerating:', error);
+            alert(`再分析中にエラーが発生しました: ${error.message}`);
+            setIsRegenerating(false);
+        }
+    }
 
     const handleSaveMemo = async () => {
         setIsSavingMemo(true)
@@ -120,6 +171,23 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         }
     }
 
+    const toggleFavorite = async () => {
+        if (!customer) return
+        const newValue = !customer.is_favorite
+        try {
+            const { error } = await supabase
+                .from('customers')
+                .update({ is_favorite: newValue })
+                .eq('id', resolvedParams.id)
+
+            if (error) throw error
+            setCustomer((prev: any) => ({ ...prev, is_favorite: newValue }))
+        } catch (error) {
+            console.error('Error toggling favorite:', error)
+            alert('お気に入りの更新に失敗しました。マイグレーションが完了しているか確認してください。')
+        }
+    }
+
     const stageLabels: Record<string, string> = {
         interest: '興味',
         build: '関係構築',
@@ -134,6 +202,29 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         control: '支配型',
         hobby: '趣味特化型',
         status: 'ステータス誇示型'
+    };
+
+    const typeStrategies: Record<string, { desc: string, strategy: string }> = {
+        approval: {
+            desc: '高い頻度で絵文字やスタンプを使用し、プレゼントや自慢話が多く、褒められることを好む傾向があります。',
+            strategy: '些細な変化や服装、持ち物を褒めましょう。会話では聞き役に徹し、「すごい」「知らなかった」など自尊心を満たすリアクションを多用することが効果的です。'
+        },
+        lonely: {
+            desc: '「寂しい」「会いたい」などの発言が多く、夜中や早朝の連絡、長文が多い傾向があります。',
+            strategy: '連絡頻度を高く保ちましょう。「今何してるの？」「声が聞きたいな」など、特別感を与えて依存させるような言葉選びが効果的です。'
+        },
+        control: {
+            desc: '質問が多く、店を決めたりリードしたがる傾向があります。「俺が教える」といった発言が目立ちます。',
+            strategy: '相手の意見やお店選びを尊重し、「頼りになる」「〇〇さんに任せたい」と伝えましょう。適度に甘える姿勢を見せることで、相手の「リードしたい欲求」を満たすことが重要です。'
+        },
+        hobby: {
+            desc: '特定の趣味（ゴルフ、車、ゲームなど）の話題が中心となる傾向があります。',
+            strategy: '相手の趣味に関する質問を積極的に行い、教えてもらう姿勢を取りましょう。「今度一緒に〜したい」と趣味に関連付けた同伴や、お店への誘いが有効です。'
+        },
+        status: {
+            desc: 'IT職・経営者など職業の自慢、お金の話、高級品の話が多い傾向があります。',
+            strategy: '相手の仕事の成功や持ち物の価値を高く評価しましょう。「〇〇さんみたいな人は初めて」と特別視し、高級なお店やボトルでの接客を提案しやすいタイプです。'
+        }
     };
 
     if (isLoading) {
@@ -162,11 +253,14 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 <Link href="/customers" className="p-2 -ml-2 text-foreground hover:text-black transition-colors">
                     <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </Link>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                    <button onClick={toggleFavorite} className="p-2 text-foreground hover:text-yellow-500 transition-colors active:scale-[0.95] active:bg-zinc-100 flex items-center justify-center">
+                        <Star className="w-5 h-5" strokeWidth={1.5} fill={customer?.is_favorite ? "currentColor" : "none"} color={customer?.is_favorite ? "#eab308" : "currentColor"} />
+                    </button>
                     <Link href={`/customers/${resolvedParams.id}/edit`} className="p-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100 block">
                         <Edit3 className="w-4 h-4" strokeWidth={1.5} />
                     </Link>
-                    <button onClick={() => alert('Options (Coming soon)')} className="p-2 -mr-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100 hidden">
+                    <button onClick={() => alert('Options (Coming soon)')} className="p-2 text-foreground hover:text-black transition-colors active:scale-[0.95] active:bg-zinc-100 hidden">
                         <MoreVertical className="w-5 h-5" strokeWidth={1.5} />
                     </button>
                 </div>
@@ -175,11 +269,11 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <div className="flex flex-col gap-8 p-6">
                 {/* Profile Card */}
                 <section className="flex flex-col items-center text-center gap-4">
-                    <div className="w-24 h-24 bg-white border border-border flex items-center justify-center p-1">
+                    <button onClick={() => setIsAiModalOpen(true)} className="w-24 h-24 bg-white border border-border flex items-center justify-center p-1 cursor-pointer hover:border-foreground transition-colors active:scale-95">
                         <div className="w-full h-full bg-foreground flex items-center justify-center text-3xl font-light text-white">
                             {customer.display_name.charAt(0)}
                         </div>
-                    </div>
+                    </button>
                     <div>
                         <h1 className="text-2xl font-light tracking-wide text-foreground">{customer.display_name}</h1>
                         <div className="flex items-center justify-center gap-2 mt-4">
@@ -337,6 +431,63 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
                 </div>
 
             </div>
+
+            {/* AI Analysis Modal */}
+            {isAiModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white w-full max-w-sm rounded-[1px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-4 border-b border-border flex items-center justify-between bg-zinc-50">
+                            <h3 className="font-light tracking-widest text-[13px] uppercase flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-rose-500" strokeWidth={1.5} />
+                                AI Analysis / 性格分析
+                            </h3>
+                            <button onClick={handleRegenerateAnalysis} disabled={isRegenerating} className="text-muted hover:text-black active:scale-95 transition-all w-8 h-8 flex items-center justify-center mr-2 disabled:opacity-50">
+                                <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin text-rose-500' : ''}`} strokeWidth={1.5} />
+                            </button>
+                            <button onClick={() => setIsAiModalOpen(false)} className="text-muted hover:text-black">
+                                <X className="w-5 h-5" strokeWidth={1.5} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 overflow-y-auto flex flex-col gap-6">
+                            {/* AI Summary */}
+                            <div className="flex flex-col gap-2">
+                                <span className="text-[10px] font-normal tracking-widest uppercase text-muted">本質的な人間性</span>
+                                <div className="p-4 bg-zinc-50 border border-border text-[13px] font-light leading-relaxed text-foreground whitespace-pre-wrap">
+                                    {priorityData?.humanNature || "性格分析のデータがまだありません。右上の更新ボタンを押して最新のLINE履歴から性格分析を実行してください。"}
+                                </div>
+                            </div>
+                            
+                            {/* Type Specific Features */}
+                            {customer.current_type && typeStrategies[customer.current_type] && (
+                                <div className="flex flex-col gap-4 border-t border-border pt-6">
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-3 py-1 bg-foreground text-white text-[10px] font-normal tracking-widest uppercase mb-2">
+                                            {typeLabels[customer.current_type]}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col gap-4">
+                                        <div>
+                                            <span className="text-[10px] font-normal tracking-widest uppercase text-muted block mb-1.5">特徴 / Features</span>
+                                            <p className="text-[12px] font-light leading-relaxed text-foreground">
+                                                {typeStrategies[customer.current_type].desc}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {!customer.current_type && (
+                                <div className="text-center p-6 border border-border bg-zinc-50 mt-2">
+                                    <p className="text-[11px] text-muted tracking-wide font-light">
+                                        タイプが判定されていません。LINE解析を行ってください。
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Target, Settings } from 'lucide-react'
+import { Home, Users, Target, Settings, Calendar } from 'lucide-react'
 
 export function BottomNav() {
     const pathname = usePathname()
@@ -12,6 +12,7 @@ export function BottomNav() {
             <nav className="w-full max-w-md bg-white px-8 py-3 flex items-center justify-between">
                 <NavItem href="/dashboard" icon={<Home strokeWidth={1.5} className="w-[22px] h-[22px]" />} label="HOME" active={pathname?.startsWith('/dashboard')} />
                 <NavItem href="/customers" icon={<Users strokeWidth={1.5} className="w-[22px] h-[22px]" />} label="CLIENTS" active={pathname?.startsWith('/customers')} />
+                <NavItem href="/calendar" icon={<Calendar strokeWidth={1.5} className="w-[22px] h-[22px]" />} label="CALENDAR" active={pathname?.startsWith('/calendar')} />
                 <NavItem href="/actions" icon={<Target strokeWidth={1.5} className="w-[22px] h-[22px]" />} label="ACTION" active={pathname?.startsWith('/actions')} />
                 <NavItem href="/settings" icon={<Settings strokeWidth={1.5} className="w-[22px] h-[22px]" />} label="SETTINGS" active={pathname?.startsWith('/settings')} />
             </nav>

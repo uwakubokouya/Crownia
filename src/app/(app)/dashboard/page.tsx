@@ -16,6 +16,7 @@ export default function DashboardPage() {
     const [attentionCustomer, setAttentionCustomer] = useState<any>(null)
     const [upgradeCustomer, setUpgradeCustomer] = useState<any>(null)
     const [currentSales, setCurrentSales] = useState<number>(0)
+    const [visitTypesCount, setVisitTypesCount] = useState<Record<string, number>>({})
 
     const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -120,16 +121,33 @@ export default function DashboardPage() {
                     setUpgradeCustomer(null)
                 }
 
-                // 4. Sales Data (Current month sum)
+                // 4. Sales Data (Current month sum) & Visit Types Breakdown
                 const monthStart = startOfMonth(new Date()).toISOString()
                 const { data: salesData } = await supabase
                     .from('events')
-                    .select('amount')
+                    .select('amount, meta')
                     .eq('type', 'visit')
                     .gte('occurred_at', monthStart)
 
                 const total = (salesData || []).reduce((sum, ev) => sum + (Number(ev.amount) || 0), 0)
                 setCurrentSales(total)
+
+                const typeCounts: Record<string, number> = {
+                    honshimei: 0,
+                    jounai: 0,
+                    dohan: 0,
+                    free: 0
+                }
+
+                if (salesData) {
+                    salesData.forEach(ev => {
+                        const vt = ev.meta?.visit_type;
+                        if (vt && typeCounts[vt] !== undefined) {
+                            typeCounts[vt]++;
+                        }
+                    })
+                }
+                setVisitTypesCount(typeCounts)
 
             } catch (err) {
                 console.error('Error fetching dashboard data:', err)
@@ -236,8 +254,31 @@ export default function DashboardPage() {
                         <span className="text-[9px] font-normal tracking-widest uppercase">CURRENT / 当月の売上 (合計)</span>
                     </div>
                     <div>
-                        <div className="text-3xl font-light text-foreground tracking-wide">¥{new Intl.NumberFormat('ja-JP').format(currentSales)}</div>
-                        <div className="mt-2 text-[10px] font-light text-muted uppercase tracking-widest">Calculated from visits this month</div>
+                        <div className="text-3xl font-light text-foreground tracking-wide mb-1">¥{new Intl.NumberFormat('ja-JP').format(currentSales)}</div>
+                        <div className="text-[10px] font-light text-muted uppercase tracking-widest mb-6 border-b border-border pb-4">Calculated from visits this month</div>
+                        
+                        {/* Visit Types Breakdown */}
+                        <div className="flex flex-col gap-2">
+                            <span className="text-[8px] font-normal tracking-widest uppercase text-muted mb-1">内訳 / Breakdown</span>
+                            <div className="grid grid-cols-4 gap-2">
+                                <div className="flex flex-col items-center bg-zinc-50 border border-border py-2 px-1">
+                                    <span className="text-[8px] text-muted tracking-widest uppercase mb-1 whitespace-nowrap">本指名</span>
+                                    <span className="text-[14px] font-light text-foreground">{visitTypesCount['honshimei'] || 0}</span>
+                                </div>
+                                <div className="flex flex-col items-center bg-zinc-50 border border-border py-2 px-1">
+                                    <span className="text-[8px] text-muted tracking-widest uppercase mb-1 whitespace-nowrap">同伴</span>
+                                    <span className="text-[14px] font-light text-foreground">{visitTypesCount['dohan'] || 0}</span>
+                                </div>
+                                <div className="flex flex-col items-center bg-zinc-50 border border-border py-2 px-1">
+                                    <span className="text-[8px] text-muted tracking-widest uppercase mb-1 whitespace-nowrap">場内</span>
+                                    <span className="text-[14px] font-light text-foreground">{visitTypesCount['jounai'] || 0}</span>
+                                </div>
+                                <div className="flex flex-col items-center bg-zinc-50 border border-border py-2 px-1">
+                                    <span className="text-[8px] text-muted tracking-widest uppercase mb-1 whitespace-nowrap">フリー</span>
+                                    <span className="text-[14px] font-light text-foreground">{visitTypesCount['free'] || 0}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
