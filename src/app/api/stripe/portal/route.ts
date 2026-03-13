@@ -19,12 +19,27 @@ export async function GET(req: Request) {
 
         const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.APP_BASE_URL || new URL(req.url).origin
 
-        if (!profile?.stripe_customer_id) {
-            return NextResponse.redirect(`${origin}/settings`)
+        let customerId = profile?.stripe_customer_id
+
+        if (!customerId) {
+            // Create a new customer in Stripe if one doesn't exist
+            const newCustomer = await stripe.customers.create({
+                email: user.email,
+                metadata: {
+                    user_id: user.id
+                }
+            })
+            customerId = newCustomer.id
+
+            // Save to database
+            await supabase
+                .from('profiles')
+                .update({ stripe_customer_id: customerId })
+                .eq('id', user.id)
         }
 
         const session = await stripe.billingPortal.sessions.create({
-            customer: profile.stripe_customer_id,
+            customer: customerId,
             return_url: `${origin}/settings`,
         })
 
