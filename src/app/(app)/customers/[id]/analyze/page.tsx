@@ -12,6 +12,7 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
     const [result, setResult] = useState<null | any>(null)
     const [pastSummaries, setPastSummaries] = useState<any[]>([])
     const [isLoadingHistory, setIsLoadingHistory] = useState(true)
+    const [isConsented, setIsConsented] = useState<boolean | null>(null)
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -21,8 +22,20 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
     )
 
     useEffect(() => {
-        const fetchHistory = async () => {
+        const fetchData = async () => {
             try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('is_user_consented_raw')
+                        .eq('id', user.id)
+                        .single()
+                    if (profile) {
+                        setIsConsented(profile.is_user_consented_raw ?? false)
+                    }
+                }
+
                 const { data, error } = await supabase
                     .from('conversation_summaries')
                     .select('*')
@@ -33,12 +46,12 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
                 if (error) throw error
                 setPastSummaries(data || [])
             } catch (err) {
-                console.error('Error fetching history:', err)
+                console.error('Error fetching data:', err)
             } finally {
                 setIsLoadingHistory(false)
             }
         }
-        fetchHistory()
+        fetchData()
     }, [resolvedParams.id, supabase])
 
     const handleAnalyze = async () => {
@@ -110,6 +123,15 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
                             <p className="text-[11px] text-muted font-light leading-relaxed">
                                 LINEのトーク履歴をペーストしてください。<br />AIが自動で会話を解析し、最適な戦略を立案します。
                             </p>
+                            
+                            {isConsented === false && (
+                                <div className="mt-6 p-3 bg-red-50 border border-red-100 rounded-sm flex items-start text-left gap-2 max-w-sm mx-auto">
+                                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                                    <p className="text-[10px] text-red-600 font-light tracking-wide leading-relaxed">
+                                        【注意】AI解析の許可がオフのため、新しいLINE解析は実行できません。設定画面から許可をオンにしてください。
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Past Summaries History Context */}
@@ -146,10 +168,13 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
 
                         <div className="relative group mt-4">
                             <textarea
-                                className="relative w-full h-64 bg-zinc-50 border border-border p-5 text-[13px] text-foreground placeholder:text-muted focus:outline-none focus:border-foreground resize-none font-light tracking-wide transition-colors"
-                                placeholder={`18:00 お客様: 今日はありがとう。\n18:05 自分: こちらこそ楽しかったよ\n...`}
+                                className={`relative w-full h-64 bg-zinc-50 border border-border p-5 text-[13px] text-foreground placeholder:text-muted focus:outline-none focus:border-foreground resize-none font-light tracking-wide transition-colors ${
+                                    isConsented === false ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                                placeholder={isConsented === false ? 'AI解析がオフになっています' : `18:00 お客様: 今日はありがとう。\n18:05 自分: こちらこそ楽しかったよ\n...`}
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
+                                disabled={isConsented === false}
                             />
                         </div>
 
@@ -167,7 +192,7 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
 
                         <button
                             onClick={handleAnalyze}
-                            disabled={!text || isAnalyzing}
+                            disabled={!text || isAnalyzing || isConsented === false}
                             className="w-full mt-4 bg-foreground hover:bg-black disabled:bg-zinc-100 disabled:text-muted disabled:border-border text-white text-[11px] uppercase tracking-widest font-normal py-4 border border-foreground transition-all active:scale-[0.99] flex items-center justify-center gap-2"
                         >
                             {isAnalyzing ? (
