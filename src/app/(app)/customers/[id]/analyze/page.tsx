@@ -4,6 +4,8 @@ import { useState, use, useEffect } from 'react'
 import { ArrowLeft, MessageCircle, AlertCircle, Wand2, ArrowRight, History } from 'lucide-react'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
+import { LineCopyGuideModal } from '@/components/line-copy-guide-modal'
+import { LineExportGuideModal } from '@/components/line-export-guide-modal'
 
 export default function AnalyzePage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params)
@@ -13,6 +15,8 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
     const [pastSummaries, setPastSummaries] = useState<any[]>([])
     const [isLoadingHistory, setIsLoadingHistory] = useState(true)
     const [isConsented, setIsConsented] = useState<boolean | null>(null)
+    const [isGuideOpen, setIsGuideOpen] = useState(false)
+    const [isExportGuideOpen, setIsExportGuideOpen] = useState(false)
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
@@ -120,9 +124,23 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
                                 <MessageCircle className="w-5 h-5" strokeWidth={1.5} />
                             </div>
                             <h1 className="text-lg font-light tracking-wide mb-3 text-foreground uppercase">Input Chat History / トーク履歴入力</h1>
-                            <p className="text-[11px] text-muted font-light leading-relaxed">
-                                LINEのトーク履歴をペーストしてください。<br />AIが自動で会話を解析し、最適な戦略を立案します。
-                            </p>
+                            <div className="flex flex-col items-center gap-3 mt-1">
+                                <p className="text-[11px] text-muted font-light leading-relaxed mb-1">
+                                    LINEのトーク履歴をペーストしてください。<br />AIが自動で会話を解析し、最適な戦略を立案します。
+                                </p>
+                                <button
+                                    onClick={() => setIsExportGuideOpen(true)}
+                                    className="text-[11px] text-foreground border-b border-foreground/30 hover:border-foreground transition-colors pb-0.5 inline-flex items-center"
+                                >
+                                    トーク履歴の送信方法はコチラ（新しく分析する場合はこちら）
+                                </button>
+                                <button
+                                    onClick={() => setIsGuideOpen(true)}
+                                    className="text-[11px] text-muted hover:text-foreground border-b border-transparent hover:border-foreground/30 transition-colors pb-0.5"
+                                >
+                                    トーク履歴のコピーの仕方はコチラ（トークの続きを送る場合はこちら）
+                                </button>
+                            </div>
                             
                             {isConsented === false && (
                                 <div className="mt-6 p-3 bg-red-50 border border-red-100 rounded-sm flex items-start text-left gap-2 max-w-sm mx-auto">
@@ -274,6 +292,9 @@ export default function AnalyzePage({ params }: { params: Promise<{ id: string }
                 )}
 
             </div>
+
+            <LineCopyGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
+            <LineExportGuideModal isOpen={isExportGuideOpen} onClose={() => setIsExportGuideOpen(false)} />
         </div>
     )
 }
